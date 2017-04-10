@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+from setuptools import setup
+
+with open('README.rst') as readme_file:
+    readme = readme_file.read()
+
+requirements = [
+    # TODO: put package requirements here
+    "aiohttp>=2.0.0",
+]
+
+test_requirements = [
+    # TODO: put package test requirements here
+]
+
+setup(
+    name='aioautomatic',
+    version='0.1.0-dev',
+    description="Asyncio library for the Automatic API",
+    long_description=readme,
+    author="Adam Mills",
+    author_email='adam@armills.info',
+    url='https://github.com/armills/aioautomatic',
+    packages=[
+        'aioautomatic',
+    ],
+    package_dir={'aioautomatic':
+                 'aioautomatic'},
+    include_package_data=True,
+    install_requires=requirements,
+    license="Apache Software License 2.0",
+    zip_safe=False,
+    keywords='aioautomatic',
+    classifiers=[
+        'Development Status :: 2 - Pre-Alpha',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Natural Language :: English',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+    ],
+    test_suite='tests',
+    tests_require=test_requirements
+)
