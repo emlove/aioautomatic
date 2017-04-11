@@ -1,18 +1,11 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from setuptools import setup
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
-    # TODO: put package requirements here
     "aiohttp>=2.0.0",
-]
-
-test_requirements = [
-    # TODO: put package test requirements here
+    "voluptuous>=0.9.3",
 ]
 
 setup(
@@ -42,6 +35,4 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
     ],
-    test_suite='tests',
-    tests_require=test_requirements
 )

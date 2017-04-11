@@ -1,3 +1,6 @@
+aiohttp>=2.0.0
+voluptuous>=0.9.3
+
 flake8==3.3.0
 pip==9.0.1
 pylint==1.6.5

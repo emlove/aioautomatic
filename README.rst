@@ -25,10 +25,33 @@ Asyncio library for the Automatic API
 * Documentation: https://aioautomatic.readthedocs.io.
 
 
-Features
---------
+Usage
+-----
 
-* TODO
+It is recommended to manage the aiohttp ClientSession object externally and pass it to the Client constructor. `(See the aiohttp documentation.) <https://aiohttp.readthedocs.io/en/stable/client_reference.html#aiohttp.ClientSession>`_ If not passed to Server, a ClientSession object will be created automatically.
+
+Open a session connection.
+
+.. code-block:: python
+
+    import asyncio
+    import aioautomatic
+    import aiohttp
+
+    @asyncio.coroutine
+    def loop():
+        aiohttp_session = aiohttp.ClientSession()
+        try:
+            client = aioautomatic.Client(
+                '<client_id>',
+                '<secret>',
+                aiohttp_session)
+            session = yield from client.create_session_from_password(
+                    '<user_email>', '<user_password>')
+        finally:
+            yield from aiohttp_session.close()
+
+    asyncio.get_event_loop().run_until_complete(loop())
 
 Credits
 ---------
