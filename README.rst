@@ -22,7 +22,8 @@ Asyncio library for the Automatic API
 
 
 * Free software: Apache Software License 2.0
-* Documentation: https://aioautomatic.readthedocs.io.
+
+All methods are python wrappers of the API definitions defined by `(Automatic) <https://developer.automatic.com/api-reference/>`_.
 
 
 Usage
@@ -30,13 +31,15 @@ Usage
 
 It is recommended to manage the aiohttp ClientSession object externally and pass it to the Client constructor. `(See the aiohttp documentation.) <https://aiohttp.readthedocs.io/en/stable/client_reference.html#aiohttp.ClientSession>`_ If not passed to Server, a ClientSession object will be created automatically.
 
-Open a session connection.
+Query for information from the users account.
 
 .. code-block:: python
 
     import asyncio
     import aioautomatic
     import aiohttp
+    from datetime import datetime
+    from datetime import timedelta
 
     @asyncio.coroutine
     def loop():
@@ -48,6 +51,11 @@ Open a session connection.
                 aiohttp_session)
             session = yield from client.create_session_from_password(
                     '<user_email>', '<user_password>')
+            vehicles = yield from session.get_vehicles()
+            print(vehicles)
+            min_end_time = datetime.utcnow() - timedelta(days=1)
+            trips = yield from session.get_trips(ended_at__gte=min_end_time, limit=10)
+            print(trips)
         finally:
             yield from aiohttp_session.close()
 

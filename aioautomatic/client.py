@@ -3,8 +3,7 @@
 import asyncio
 import logging
 
-import aiohttp
-
+from aioautomatic import base
 from aioautomatic import const
 from aioautomatic import exceptions
 from aioautomatic import session
@@ -13,7 +12,7 @@ from aioautomatic import validation
 _LOGGER = logging.getLogger(__name__)
 
 
-class Client():
+class Client(base.BaseApiObject):
     """API client object to access all underlying methods."""
 
     def __init__(self, client_id, client_secret, client_session=None,
@@ -28,11 +27,9 @@ class Client():
                                requests
         :returns Client: Automatic API Client.
         """
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.client_session = client_session or aiohttp.ClientSession()
-        self.loop = self.client_session.loop
-        self.request_kwargs = request_kwargs or {}
+        super().__init__(None, request_kwargs, client_session)
+        self._client_id = client_id
+        self._client_secret = client_secret
 
     @asyncio.coroutine
     def create_session_from_password(self, username, password):
@@ -44,62 +41,29 @@ class Client():
         """
         _LOGGER.info("Creating session from username/password.")
         auth_payload = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret,
+            'client_id': self._client_id,
+            'client_secret': self._client_secret,
             'grant_type': 'password',
             'username': username,
             'password': password,
             'scope': const.FULL_SCOPE,
             }
         try:
-            resp = yield from self.post(const.AUTH_URL, auth_payload)
+            resp = yield from self._post(const.AUTH_URL, auth_payload)
         except exceptions.ForbiddenError:
             auth_payload['scope'] = const.DEFAULT_SCOPE
-            resp = yield from self.post(const.AUTH_URL, auth_payload)
+            resp = yield from self._post(const.AUTH_URL, auth_payload)
             _LOGGER.warning("No client access to scope:current_location. "
                             "Live location updates not available.")
         resp = validation.AUTH_TOKEN(resp)
         return session.Session(self, **resp)
 
-    @asyncio.coroutine
-    def request(self, method, url, data):
-        """Wrapper for aiohttp request that returns a parsed dict."""
-        try:
-            _LOGGER.debug('Sending %s, to %s: %s', method, url, data)
-            resp = yield from self.client_session.request(
-                method, url, data=data, **self.request_kwargs)
-        except (aiohttp.client_exceptions.ClientError,
-                asyncio.TimeoutError) as exc:
-            raise exceptions.TransportError from exc
+    @property
+    def client_id(self):
+        """Automatic Application Client ID"""
+        return self._client_id
 
-        status_exception = exceptions.HTTP_EXCEPTIONS.get(resp.status)
-        if status_exception is not None:
-            resp_json = {}
-            try:
-                resp_json = yield from resp.json()
-            except (aiohttp.client_exceptions.ClientResponseError,
-                    ValueError):
-                # Error message is nice, but not required
-                pass
-            raise status_exception(resp_json.get('error'),
-                                   resp_json.get('error_description'))
-
-        try:
-            return (yield from resp.json())
-        except (aiohttp.client_exceptions.ClientResponseError,
-                ValueError) as exc:
-            raise exceptions.ProtocolError from exc
-
-    def get(self, url, data):
-        """Wrapper for aiohttp get.
-
-        This method is a coroutine.
-        """
-        return self.request(aiohttp.hdrs.METH_GET, url, data)
-
-    def post(self, url, data):
-        """Wrapper for aiohttp post.
-
-        This method is a coroutine.
-        """
-        return self.request(aiohttp.hdrs.METH_POST, url, data)
+    @property
+    def client_secret(self):
+        """Automatic Application Secret"""
+        return self._client_secret
