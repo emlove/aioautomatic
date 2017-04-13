@@ -24,7 +24,6 @@ class BaseApiObject():
             self._client_session = parent.client_session
             self._request_kwargs = parent.request_kwargs.copy()
             self._request_kwargs.update(request_kwargs or {})
-        self._loop = self._client_session.loop
 
     @asyncio.coroutine
     def _request(self, method, url, data):
@@ -72,7 +71,7 @@ class BaseApiObject():
     @property
     def loop(self):
         """Active event loop for this object."""
-        return self._loop
+        return self._client_session.loop
 
     @property
     def client_session(self):
@@ -85,13 +84,12 @@ class BaseApiObject():
         return self._request_kwargs
 
 
-class BaseDataObject(BaseApiObject):
+class BaseDataObject():
     """Object that represents data received from the API."""
     validator = lambda _: None  # noqa: E731
 
-    def __init__(self, parent, data):
+    def __init__(self, data):
         """Create the data object."""
-        super().__init__(parent)
         self._data = self.validator(data)
 
     def __getattr__(self, name):
@@ -118,8 +116,7 @@ class ResultList(BaseApiObject, list):
         BaseApiObject.__init__(self, parent)
         self._item_class = item_class
         resp = validation.LIST_RESPONSE(resp)
-        list.__init__(self, (item_class(parent, item)
-                             for item in resp['results']))
+        list.__init__(self, (item_class(item) for item in resp['results']))
         self._next = resp['_metadata']['next']
         self._previous = resp['_metadata']['previous']
 

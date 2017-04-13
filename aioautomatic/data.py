@@ -29,17 +29,12 @@ class Trip(base.BaseDataObject):
 
     validator = validation.TRIP
 
-    def __init__(self, parent, data):
+    def __init__(self, data):
         """Create the data object."""
-        super().__init__(parent, data)
-        self.start_location = Location(
-            self, self._data.get('start_location'))
-        self.start_address = Address(
-            self, self._data.get('start_address'))
-        self.end_location = Location(
-            self, self._data.get('end_location'))
-        self.end_address = Address(
-            self, self._data.get('end_address'))
+        super().__init__(data)
+        self.start_location = Location(self._data.get('start_location'))
+        self.start_address = Address(self._data.get('start_address'))
+        self.end_location = Location(self._data.get('end_location'))
+        self.end_address = Address(self._data.get('end_address'))
         self.vehicle_events = [
-            VehicleEvent(self, ev)
-            for ev in self._data.get('vehicle_events')]
+            VehicleEvent(ev) for ev in self._data.get('vehicle_events')]
