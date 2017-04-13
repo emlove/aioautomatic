@@ -101,11 +101,11 @@ class BaseDataObject():
 
     def __repr__(self):
         """Return a string representation of this object for debugging."""
-        if hasattr(self, 'id'):
-            return '<{}.{} id="{}">'.format(
-                self.__module__, self.__class__.__name__, self.id)
-        else:
+        if not hasattr(self, 'id'):
             return super().__repr__()
+
+        return '<{}.{} id="{}">'.format(
+            self.__module__, self.__class__.__name__, self.id)
 
 
 class ResultList(BaseApiObject, list):

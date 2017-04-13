@@ -18,11 +18,8 @@ class HttpStatusError(ProtocolError):
 
     def __init__(self, error=None, description=None):
         """Create an error for an http response status."""
-        message = self.__doc__
         msg_list = list(filter(None, (error, description)))
-        if len(msg_list) > 0:
-            message = ': '.join(msg_list)
-        super().__init__(message)
+        super().__init__(': '.join(msg_list) or self.__doc__)
 
 
 class BadRequestError(HttpStatusError):
