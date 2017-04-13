@@ -38,7 +38,7 @@ class Session(base.BaseApiObject):
         if self._renew_handle is not None:
             self._renew_handle.cancel()
         self._renew_handle = self.loop.call_at(
-            renew_time, lambda: asyncio.ensure_future(self.refresh()))
+            renew_time, lambda: self.loop.create_task(self.refresh()))
 
     @asyncio.coroutine
     def refresh(self):
