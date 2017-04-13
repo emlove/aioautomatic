@@ -9,10 +9,8 @@ aioautomatic
 .. image:: https://img.shields.io/travis/armills/aioautomatic.svg
         :target: https://travis-ci.org/armills/aioautomatic
 
-.. image:: https://pyup.io/repos/github/armills/aioautomatic/shield.svg
-     :target: https://pyup.io/repos/github/armills/aioautomatic/
-     :alt: Updates
-
+.. image:: https://img.shields.io/coveralls/armills/aioautomatic.svg
+        :target: https://coveralls.io/r/armills/aioautomatic?branch=master
 
 Asyncio library for the Automatic API
 
