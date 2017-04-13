@@ -19,12 +19,15 @@ def opt(key):
 
 def coerce_datetime(value):
     """Coerce a value to datetime."""
+    if isinstance(value, datetime):
+        return value
+
     try:
         return datetime.strptime(value, vol.Datetime.DEFAULT_FORMAT)
     except (TypeError, ValueError):
         raise vol.DatetimeInvalid(
-            'Value does not match expected format {}'.format(
-                vol.Datetime.DEFAULT_FORMAT))
+            'Value {} does not match expected format {}'.format(
+                value, vol.Datetime.DEFAULT_FORMAT))
 
 
 OPT_STR = vol.Any(str, None)
@@ -74,15 +77,15 @@ LIST_METADATA = _RESPONSE_BASE.extend({
 
 LIST_RESPONSE = _RESPONSE_BASE.extend({
     "_metadata": LIST_METADATA,
-    "results": [],
+    "results": [lambda _: _],  # Results are validated independently
 })
 
 VEHICLE = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
     opt("vin"): OPT_STR,
-    opt("created_at"): coerce_datetime,
-    opt("updated_at"): coerce_datetime,
+    opt("created_at"): OPT_DATETIME,
+    opt("updated_at"): OPT_DATETIME,
     opt("make"): OPT_STR,
     opt("model"): OPT_STR,
     opt("year"): OPT_INT,
