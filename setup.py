@@ -5,7 +5,7 @@ with open('README.rst') as readme_file:
 
 requirements = [
     "aiohttp>=2.0.0",
-    "voluptuous>=0.9.3",
+    "voluptuous>=0.10.2",
 ]
 
 setup(
