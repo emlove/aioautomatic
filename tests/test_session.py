@@ -1,7 +1,8 @@
 """Tests for automatic client."""
 from datetime import datetime, timezone
+from aioautomatic.session import Session
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from tests.common import AsyncMock
 
 
@@ -37,6 +38,43 @@ def test_session_refresh(session):
         "refresh_token": refresh_token,
     }
     assert renew_handle.cancel.called
+
+
+def test_session_auto_refresh(aiohttp_session):
+    """Test auto-refreshing a session with the refresh token."""
+    client = AsyncMock()
+    client.client_session = aiohttp_session
+    client.request_kwargs = {}
+    data = {
+        "access_token": "123",
+        "refresh_token": "ABCD",
+        "expires_in": 12345,
+        "scope": ("scope:location scope:vehicle:profile "
+                  "scope:user:profile scope:trip"),
+    }
+
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "access_token": "mock_access",
+        "expires_in": 123456,
+        "scope": ("scope:location scope:vehicle:profile "
+                  "scope:user:profile scope:trip"),
+        "refresh_token": "mock_refresh",
+        "token_type": "Bearer",
+    }
+
+    with patch.object(aiohttp_session.loop, 'call_at') as mock_call_at:
+        session = Session(client, **data)
+        assert mock_call_at.called
+        assert len(mock_call_at.mock_calls) == 1
+
+    with patch.object(aiohttp_session.loop, 'create_task'):
+        with patch.object(session, 'refresh') as mock_refresh:
+            assert not mock_refresh.called
+            mock_call_at.mock_calls[0][1][1]()
+            assert mock_refresh.called
+            assert len(mock_refresh.mock_calls) == 1
 
 
 def test_get_vehicles(session):
