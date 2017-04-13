@@ -17,17 +17,21 @@ def opt(key):
     return vol.Optional(key, default=None)
 
 
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ%z'
+
+
 def coerce_datetime(value):
     """Coerce a value to datetime."""
     if isinstance(value, datetime):
         return value
 
     try:
-        return datetime.strptime(value, vol.Datetime.DEFAULT_FORMAT)
+        value = '{}+0000'.format(value)
+        return datetime.strptime(value, DATETIME_FORMAT)
     except (TypeError, ValueError):
         raise vol.DatetimeInvalid(
             'Value {} does not match expected format {}'.format(
-                value, vol.Datetime.DEFAULT_FORMAT))
+                value, DATETIME_FORMAT))
 
 
 OPT_STR = vol.Any(str, None)

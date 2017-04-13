@@ -1,5 +1,5 @@
 """Tests for automatic client."""
-from datetime import datetime
+from datetime import datetime, timezone
 
 from unittest.mock import MagicMock
 from tests.common import AsyncMock
@@ -76,14 +76,7 @@ def test_get_vehicles(session):
     assert vehicle.vin is None
     assert vehicle.submodel is None
     assert vehicle.created_at == datetime(
-        year=2015,
-        month=3,
-        day=20,
-        hour=1,
-        minute=43,
-        second=36,
-        microsecond=738000,
-        )
+        2015, 3, 20, 1, 43, 36, 738000, tzinfo=timezone.utc)
     assert vehicle.fuel_level_percent == 73.9
 
 
@@ -153,21 +146,7 @@ def test_get_trips(session):
     assert trip.hard_brakes == 2
     assert trip.path is None
     assert trip.started_at == datetime(
-        year=2015,
-        month=3,
-        day=21,
-        hour=1,
-        minute=43,
-        second=36,
-        microsecond=738000,
-        )
+        2015, 3, 21, 1, 43, 36, 738000, tzinfo=timezone.utc)
     assert trip.ended_at == datetime(
-        year=2015,
-        month=3,
-        day=21,
-        hour=4,
-        minute=45,
-        second=36,
-        microsecond=738000,
-        )
+        2015, 3, 21, 4, 45, 36, 738000, tzinfo=timezone.utc)
     assert trip.tags == ["business"]
