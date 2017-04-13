@@ -13,6 +13,10 @@ class TransportError(AutomaticError):
     """An error caused by an underlying transport problem."""
 
 
+class InvalidResponseError(ProtocolError):
+    """The response returned from Automatic is not valid json."""
+
+
 class HttpStatusError(ProtocolError):
     """Exception raised from the HTTP response status code."""
 

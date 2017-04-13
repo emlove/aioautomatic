@@ -52,7 +52,7 @@ class BaseApiObject():
             return (yield from resp.json())
         except (aiohttp.client_exceptions.ClientResponseError,
                 ValueError) as exc:
-            raise exceptions.ProtocolError from exc
+            raise exceptions.InvalidResponseError from exc
 
     def _get(self, url, data=None):
         """Wrapper for aiohttp get.
