@@ -11,6 +11,7 @@ class AsyncMock(MagicMock):
     def __call__(self, *args, **kwargs):
         return super().__call__(*args, **kwargs)
 
+
 class SessionMock(AsyncMock):
     """Mock for aiohttp client session objects."""
 

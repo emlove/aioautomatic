@@ -105,7 +105,7 @@ class BaseDataObject(BaseApiObject):
         """Return a string representation of this object for debugging."""
         if hasattr(self, 'id'):
             return '<{}.{} id="{}">'.format(
-                self.__module__,self.__class__.__name__, self.id)
+                self.__module__, self.__class__.__name__, self.id)
         else:
             return super().__repr__()
 
@@ -118,7 +118,8 @@ class ResultList(BaseApiObject, list):
         BaseApiObject.__init__(self, parent)
         self._item_class = item_class
         resp = validation.LIST_RESPONSE(resp)
-        list.__init__(self, (item_class(parent, item) for item in resp['results']))
+        list.__init__(self, (item_class(parent, item)
+                             for item in resp['results']))
         self._next = resp['_metadata']['next']
         self._previous = resp['_metadata']['previous']
 

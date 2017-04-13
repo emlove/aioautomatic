@@ -1,8 +1,7 @@
 """Tests for automatic client."""
-import asyncio
 from aioautomatic.client import Client
 
-from tests.common import AsyncMock, SessionMock
+from tests.common import AsyncMock
 
 
 def test_create_client(aiohttp_session):
@@ -21,14 +20,14 @@ def test_create_session_from_password(client):
     resp.json.return_value = {
         "access_token": "mock_access",
         "expires_in": 123456,
-        "scope": "scope:location scope:vehicle:profile " \
-                 "scope:user:profile scope:trip",
+        "scope": ("scope:location scope:vehicle:profile "
+                  "scope:user:profile scope:trip"),
         "refresh_token": "mock_refresh",
         "token_type": "Bearer",
     }
     client._client_session.request.return_value = resp
 
-    session = client.loop.run_until_complete(
+    client.loop.run_until_complete(
         client.create_session_from_password("mock_user", "mock_pass"))
     assert client._client_session.request.called
     assert len(client._client_session.request.mock_calls) == 2
@@ -41,6 +40,6 @@ def test_create_session_from_password(client):
         "grant_type": "password",
         "username": "mock_user",
         "password": "mock_pass",
-        "scope": "scope:location scope:vehicle:profile " \
-                "scope:user:profile scope:trip scope:current_location",
+        "scope": ("scope:location scope:vehicle:profile "
+                  "scope:user:profile scope:trip scope:current_location"),
     }

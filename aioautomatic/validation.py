@@ -11,14 +11,16 @@ def timestamp(value):
 
     return value.timestamp()
 
+
 def opt(key):
     """Create an optional key that returns a default of None."""
     return vol.Optional(key, default=None)
 
-opt_str = vol.Any(str, None)
-opt_int = vol.Any(int, None)
-opt_float = vol.Any(float, None)
-opt_datetime = vol.Any(vol.Datetime(), None)
+
+OPT_STR = vol.Any(str, None)
+OPT_INT = vol.Any(int, None)
+OPT_FLOAT = vol.Any(float, None)
+OPT_DATETIME = vol.Any(vol.Datetime(), None)
 
 
 _REQUEST_BASE = vol.Schema({}, required=False)
@@ -56,8 +58,8 @@ AUTH_TOKEN = _RESPONSE_BASE.extend({
 
 LIST_METADATA = _RESPONSE_BASE.extend({
     "count": vol.All(int, vol.Range(min=0)),
-    "next": opt_str,
-    "previous": opt_str,
+    "next": OPT_STR,
+    "previous": OPT_STR,
 })
 
 LIST_RESPONSE = _RESPONSE_BASE.extend({
@@ -68,15 +70,15 @@ LIST_RESPONSE = _RESPONSE_BASE.extend({
 VEHICLE = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
-    opt("vin"): opt_str,
+    opt("vin"): OPT_STR,
     opt("created_at"): vol.Datetime(),
     opt("updated_at"): vol.Datetime(),
-    opt("make"): opt_str,
-    opt("model"): opt_str,
-    opt("year"): opt_int,
-    opt("submodel"): opt_str,
-    opt("display_name"): opt_str,
-    opt("fuel_grade"): opt_str,
+    opt("make"): OPT_STR,
+    opt("model"): OPT_STR,
+    opt("year"): OPT_INT,
+    opt("submodel"): OPT_STR,
+    opt("display_name"): OPT_STR,
+    opt("fuel_grade"): OPT_STR,
     opt("fuel_level_percent"): vol.Any(
         vol.All(float, vol.Range(min=0, max=100)), None),
     opt("battery_voltage"): vol.Any(vol.All(float, vol.Range(min=0)), None),
@@ -89,55 +91,55 @@ LOCATION = _RESPONSE_BASE.extend({
 })
 
 ADDRESS = _RESPONSE_BASE.extend({
-    opt("name"): opt_str,
-    opt("display_name"): opt_str,
-    opt("street_number"): opt_str,
-    opt("streen_name"): opt_str,
-    opt("city"): opt_str,
-    opt("state"): opt_str,
-    opt("country"): opt_str,
+    opt("name"): OPT_STR,
+    opt("display_name"): OPT_STR,
+    opt("street_number"): OPT_STR,
+    opt("streen_name"): OPT_STR,
+    opt("city"): OPT_STR,
+    opt("state"): OPT_STR,
+    opt("country"): OPT_STR,
 })
 
 VEHICLE_EVENT = _RESPONSE_BASE.extend({
     "type": str,
-    opt("lat"): opt_float,
-    opt("lon"): opt_float,
+    opt("lat"): OPT_FLOAT,
+    opt("lon"): OPT_FLOAT,
     opt("created_at"): vol.Datetime(),
-    opt("g_force"): opt_float,
+    opt("g_force"): OPT_FLOAT,
 })
 
 TRIP = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
-    "driver": opt_str,
-    opt("user"): opt_str,
-    opt("started_at"): opt_datetime,
-    opt("ended_at"): opt_datetime,
-    opt("distance_m"): opt_float,
-    opt("duration_s"): opt_float,
-    opt("vehicle"): opt_str,
+    "driver": OPT_STR,
+    opt("user"): OPT_STR,
+    opt("started_at"): OPT_DATETIME,
+    opt("ended_at"): OPT_DATETIME,
+    opt("distance_m"): OPT_FLOAT,
+    opt("duration_s"): OPT_FLOAT,
+    opt("vehicle"): OPT_STR,
     "start_location": LOCATION,
     "start_address": ADDRESS,
     "end_location": LOCATION,
     "end_address": ADDRESS,
-    opt("path"): opt_str,
-    opt("fuel_cost_ust"): opt_float,
-    opt("fuel_volume_l"): opt_float,
-    opt("average_kmpl"): opt_float,
-    opt("average_from_epa_kmpl"): opt_float,
-    opt("score_events"): opt_float,
-    opt("score_speeding"): opt_float,
-    opt("hard_brakes"): opt_int,
-    opt("hard_accels"): opt_int,
-    opt("duration_over_70_s"): opt_int,
-    opt("duration_over_75_s"): opt_int,
-    opt("duration_over_80_s"): opt_int,
+    opt("path"): OPT_STR,
+    opt("fuel_cost_ust"): OPT_FLOAT,
+    opt("fuel_volume_l"): OPT_FLOAT,
+    opt("average_kmpl"): OPT_FLOAT,
+    opt("average_from_epa_kmpl"): OPT_FLOAT,
+    opt("score_events"): OPT_FLOAT,
+    opt("score_speeding"): OPT_FLOAT,
+    opt("hard_brakes"): OPT_INT,
+    opt("hard_accels"): OPT_INT,
+    opt("duration_over_70_s"): OPT_INT,
+    opt("duration_over_75_s"): OPT_INT,
+    opt("duration_over_80_s"): OPT_INT,
     vol.Optional("vehicle_events", default=[]): [VEHICLE_EVENT],
-    opt("start_timezone"): opt_str,
-    opt("end_timezone"): opt_str,
-    opt("city_fraction"): opt_float,
-    opt("highway_fraction"): opt_float,
-    opt("night_driving_fraction"): opt_float,
-    opt("idling_time_s"): opt_int,
+    opt("start_timezone"): OPT_STR,
+    opt("end_timezone"): OPT_STR,
+    opt("city_fraction"): OPT_FLOAT,
+    opt("highway_fraction"): OPT_FLOAT,
+    opt("night_driving_fraction"): OPT_FLOAT,
+    opt("idling_time_s"): OPT_INT,
     "tags": [str],
 })
