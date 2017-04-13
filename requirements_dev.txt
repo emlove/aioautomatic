@@ -1,10 +1,12 @@
 aiohttp>=2.0.0
 voluptuous>=0.9.3
 
-flake8==3.3.0
-pip==9.0.1
-pylint==1.6.5
-pytest==3.0.5
-pytest-asyncio==0.5.0
+coveralls>=1.1
+flake8>=3.3.0
+pip>=9.0.1
+pylint>=1.6.5
+pytest>=3.0.5
+pytest-asyncio>=0.5.0
+pytest-cov>=2.3.1
 pytest-sugar>=0.7.1
-tox==2.5.0
+tox>=2.5.0
