@@ -17,10 +17,20 @@ def opt(key):
     return vol.Optional(key, default=None)
 
 
+def coerce_datetime(value):
+    """Coerce a value to datetime."""
+    try:
+        return datetime.strptime(value, vol.Datetime.DEFAULT_FORMAT)
+    except (TypeError, ValueError):
+        raise vol.DatetimeInvalid(
+            'Value does not match expected format {}'.format(
+                vol.Datetime.DEFAULT_FORMAT))
+
+
 OPT_STR = vol.Any(str, None)
 OPT_INT = vol.Any(int, None)
 OPT_FLOAT = vol.Any(float, None)
-OPT_DATETIME = vol.Any(vol.Datetime(), None)
+OPT_DATETIME = vol.Any(coerce_datetime, None)
 
 
 _REQUEST_BASE = vol.Schema({}, required=False)
@@ -71,17 +81,16 @@ VEHICLE = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
     opt("vin"): OPT_STR,
-    opt("created_at"): vol.Datetime(),
-    opt("updated_at"): vol.Datetime(),
+    opt("created_at"): coerce_datetime,
+    opt("updated_at"): coerce_datetime,
     opt("make"): OPT_STR,
     opt("model"): OPT_STR,
     opt("year"): OPT_INT,
     opt("submodel"): OPT_STR,
     opt("display_name"): OPT_STR,
     opt("fuel_grade"): OPT_STR,
-    opt("fuel_level_percent"): vol.Any(
-        vol.All(float, vol.Range(min=0, max=100)), None),
-    opt("battery_voltage"): vol.Any(vol.All(float, vol.Range(min=0)), None),
+    opt("fuel_level_percent"): vol.Any(float, None),
+    opt("battery_voltage"): vol.Any(float, None),
 })
 
 LOCATION = _RESPONSE_BASE.extend({
@@ -104,7 +113,7 @@ VEHICLE_EVENT = _RESPONSE_BASE.extend({
     "type": str,
     opt("lat"): OPT_FLOAT,
     opt("lon"): OPT_FLOAT,
-    opt("created_at"): vol.Datetime(),
+    opt("created_at"): coerce_datetime,
     opt("g_force"): OPT_FLOAT,
 })
 
@@ -123,7 +132,7 @@ TRIP = _RESPONSE_BASE.extend({
     "end_location": LOCATION,
     "end_address": ADDRESS,
     opt("path"): OPT_STR,
-    opt("fuel_cost_ust"): OPT_FLOAT,
+    opt("fuel_cost_usd"): OPT_FLOAT,
     opt("fuel_volume_l"): OPT_FLOAT,
     opt("average_kmpl"): OPT_FLOAT,
     opt("average_from_epa_kmpl"): OPT_FLOAT,
