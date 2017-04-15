@@ -53,8 +53,8 @@ class Client(base.BaseApiObject):
         except exceptions.ForbiddenError:
             auth_payload['scope'] = const.DEFAULT_SCOPE
             resp = yield from self._post(const.AUTH_URL, auth_payload)
-            _LOGGER.warning("No client access to scope:current_location. "
-                            "Live location updates not available.")
+            _LOGGER.debug("No client access to scope:current_location. "
+                          "Live location updates not available.")
         resp = validation.AUTH_TOKEN(resp)
         return session.Session(self, **resp)
 
