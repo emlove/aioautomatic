@@ -45,11 +45,29 @@ Query for information from the users account.
                 aiohttp_session)
             session = yield from client.create_session_from_password(
                     '<user_email>', '<user_password>')
+
+            # Fetch a list of vehicles associated with the user account
             vehicles = yield from session.get_vehicles()
             print(vehicles)
-            min_end_time = datetime.utcnow() - timedelta(days=1)
+            print(vehicles[0].make)
+            print(vehicles[0].model)
+            print(vehicles[0].fuel_level_percent)
+
+            # Fetch a list of all trips in the last 10 days
+            min_end_time = datetime.utcnow() - timedelta(days=10)
             trips = yield from session.get_trips(ended_at__gte=min_end_time, limit=10)
             print(trips)
+            print(trips[0].start_location.lat)
+            print(trips[0].start_location.lon)
+            print(trips[0].start_address.name)
+            print(trips[0].distance_m)
+            print(trips[0].duration_s)
+
+            # If more than 10 trips exist, get the next page of results
+            if trips.next is not None:
+                trips = yield from trips.get_next()
+                print(trips)
+
         finally:
             yield from aiohttp_session.close()
 
