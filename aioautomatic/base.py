@@ -86,7 +86,7 @@ class BaseApiObject():
 
 class BaseDataObject():
     """Object that represents data received from the API."""
-    validator = lambda _: None  # noqa: E731
+    validator = lambda self, value: {}  # noqa: E731
 
     def __init__(self, data):
         """Create the data object."""

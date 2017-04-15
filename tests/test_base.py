@@ -1,12 +1,17 @@
 """Tests for automatic base objects."""
 import asyncio
 import aiohttp
+import voluptuous as vol
 from aioautomatic import base
 from aioautomatic import exceptions
 
 import pytest
 from unittest.mock import patch
 from tests.common import AsyncMock
+
+
+class MockDataObject(base.BaseDataObject):
+    validator = vol.Schema({"attr1": str}, extra=vol.REMOVE_EXTRA)
 
 
 @patch.object(base, 'aiohttp')
@@ -183,3 +188,137 @@ def test_request_status_bad_json(aiohttp_session):
 
     with pytest.raises(exceptions.InvalidResponseError):
         aiohttp_session.loop.run_until_complete(obj._request("GET", "url", {}))
+
+
+def test_base_data_object_no_validator():
+    """Test the base data object with no validator."""
+    obj = base.BaseDataObject({
+        "attr1": "value1",
+        "attr2": "value2",
+    })
+    with pytest.raises(AttributeError):
+        obj.attr1
+
+
+def test_base_data_object():
+    """Test the base data object."""
+    obj = MockDataObject({
+        "attr1": "value1",
+        "attr2": "value2",
+    })
+
+    assert obj.attr1 == "value1"
+    with pytest.raises(AttributeError):
+        obj.attr2
+    with pytest.raises(AttributeError):
+        obj.attr3
+
+
+def test_result_list(session):
+    """Test the result object."""
+    obj = base.ResultList(parent=session, item_class=MockDataObject, resp={
+        "_metadata": {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            },
+        "results": [
+            {
+                "attr1": "value1",
+                "attr2": "value2",
+            }, {
+                "attr1": "value3"
+            }],
+        })
+    next_list = session.loop.run_until_complete(obj.get_next())
+    previous_list = session.loop.run_until_complete(obj.get_previous())
+    assert obj.next is None
+    assert obj.previous is None
+    assert next_list is None
+    assert previous_list is None
+    assert len(obj) == 2
+    assert sorted([item.attr1 for item in obj]) == sorted(["value1", "value3"])
+
+
+def test_result_next_list(session):
+    """Test the result object get next list."""
+    obj = base.ResultList(parent=session, item_class=MockDataObject, resp={
+        "_metadata": {
+            "count": 0,
+            "next": "next_url",
+            "previous": None,
+            },
+        "results": [],
+        })
+    resp = AsyncMock()
+    resp.status = 200
+    mock_json = {
+        "_metadata": {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            },
+        "results": [
+            {
+                "attr1": "value1",
+                "attr2": "value2",
+            }, {
+                "attr1": "value3"
+            }],
+    }
+    resp.json.return_value = mock_json
+    session._client_session.request.return_value = resp
+
+    next_list = session.loop.run_until_complete(obj.get_next())
+    previous_list = session.loop.run_until_complete(obj.get_previous())
+    assert obj.previous is None
+    assert previous_list is None
+    assert len(obj) == 0
+
+    assert obj.next is "next_url"
+    assert len(obj) == 0
+    assert len(next_list) == 2
+    assert sorted([item.attr1 for item in next_list]) == \
+        sorted(["value1", "value3"])
+
+
+def test_result_previous_list(session):
+    """Test the result object get previous list."""
+    obj = base.ResultList(parent=session, item_class=MockDataObject, resp={
+        "_metadata": {
+            "count": 0,
+            "next": None,
+            "previous": "previous_url",
+            },
+        "results": [],
+        })
+    resp = AsyncMock()
+    resp.status = 200
+    mock_json = {
+        "_metadata": {
+            "count": 2,
+            "next": None,
+            "previous": None,
+            },
+        "results": [
+            {
+                "attr1": "value1",
+                "attr2": "value2",
+            }, {
+                "attr1": "value3"
+            }],
+    }
+    resp.json.return_value = mock_json
+    session._client_session.request.return_value = resp
+
+    next_list = session.loop.run_until_complete(obj.get_next())
+    previous_list = session.loop.run_until_complete(obj.get_previous())
+    assert obj.next is None
+    assert next_list is None
+    assert len(obj) == 0
+
+    assert obj.previous is "previous_url"
+    assert len(obj) == 0
+    assert len(previous_list) == 2
+    assert sorted([item.attr1 for item in previous_list]) == \
+        sorted(["value1", "value3"])
