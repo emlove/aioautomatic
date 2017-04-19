@@ -38,3 +38,8 @@ class Trip(base.BaseDataObject):
         self.end_address = Address(self._data.get('end_address'))
         self.vehicle_events = [
             VehicleEvent(ev) for ev in self._data.get('vehicle_events')]
+
+
+class Device(base.BaseDataObject):
+    """Device object to manage access to a device information."""
+    validator = validation.DEVICE

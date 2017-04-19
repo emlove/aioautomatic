@@ -11,6 +11,11 @@ from aioautomatic import validation
 _LOGGER = logging.getLogger(__name__)
 
 
+def gen_query_string(params):
+    """Generate a query string from the parameter dict."""
+    return '&'.join('{}={}'.format(k, v) for k, v in params.items())
+
+
 class Session(base.BaseApiObject):
     """Session object to manage access to a users information."""
 
@@ -66,8 +71,7 @@ class Session(base.BaseApiObject):
         :param page: Page number of paginated result to return
         :param limit: Number of results per page
         """
-        params = validation.VEHICLES_REQUEST(kwargs)
-        querystring = '&'.join('{}={}'.format(k, v) for k, v in params.items())
+        querystring = gen_query_string(validation.VEHICLES_REQUEST(kwargs))
 
         _LOGGER.info("Fetching vehicles.")
         resp = yield from self._get('?'.join((const.VEHICLE_URL, querystring)))
@@ -86,9 +90,22 @@ class Session(base.BaseApiObject):
         :param page: Page number of paginated result to return
         :param limit: Number of results per page
         """
-        params = validation.TRIPS_REQUEST(kwargs)
-        querystring = '&'.join('{}={}'.format(k, v) for k, v in params.items())
+        querystring = gen_query_string(validation.TRIPS_REQUEST(kwargs))
 
         _LOGGER.info("Fetching trips.")
         resp = yield from self._get('?'.join((const.TRIP_URL, querystring)))
         return base.ResultList(self, resp, data.Trip)
+
+    @asyncio.coroutine
+    def get_devices(self, **kwargs):
+        """Get all devices associated with this user account.
+
+        :param device__serial_number: Device serial number
+        :param page: Page number of paginated result to return
+        :param limit: Number of results per page
+        """
+        querystring = gen_query_string(validation.DEVICES_REQUEST(kwargs))
+
+        _LOGGER.info("Fetching devices.")
+        resp = yield from self._get('?'.join((const.DEVICE_URL, querystring)))
+        return base.ResultList(self, resp, data.Device)

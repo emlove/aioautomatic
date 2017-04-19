@@ -63,6 +63,12 @@ TRIPS_REQUEST = _REQUEST_BASE.extend({
     "limit": vol.All(int, vol.Range(min=1, max=250)),
 })
 
+DEVICES_REQUEST = _REQUEST_BASE.extend({
+    "device__serial_number": str,
+    "page": vol.All(int, vol.Range(min=1)),
+    "limit": vol.All(int, vol.Range(min=1, max=250)),
+})
+
 _RESPONSE_BASE = vol.Schema({}, required=True, extra=vol.REMOVE_EXTRA)
 
 AUTH_TOKEN = _RESPONSE_BASE.extend({
@@ -158,4 +164,12 @@ TRIP = _RESPONSE_BASE.extend({
     opt("night_driving_fraction"): OPT_FLOAT,
     opt("idling_time_s"): OPT_INT,
     "tags": [str],
+})
+
+DEVICE = _RESPONSE_BASE.extend({
+    "url": str,
+    "id": str,
+    "version": int,
+    opt("direct_access_token"): OPT_STR,
+    opt("app_encryption_key"): OPT_STR,
 })

@@ -188,3 +188,32 @@ def test_get_trips(session):
     assert trip.ended_at == datetime(
         2015, 3, 21, 4, 45, 36, 738000, tzinfo=timezone.utc)
     assert trip.tags == ["business"]
+
+
+def test_get_devices(session):
+    """Test getting device list."""
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "_metadata": {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            },
+        "results": [{
+            "url": "mock_url",
+            "id": "mock_id",
+            "version": 2,
+            }],
+    }
+    session._client_session.request.return_value = resp
+
+    device = session.loop.run_until_complete(session.get_devices())[0]
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/device?"
+    assert device.url == "mock_url"
+    assert device.id == "mock_id"
+    assert device.version == 2
