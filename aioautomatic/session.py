@@ -109,3 +109,18 @@ class Session(base.BaseApiObject):
         _LOGGER.info("Fetching devices.")
         resp = yield from self._get('?'.join((const.DEVICE_URL, querystring)))
         return base.ResultList(self, resp, data.Device)
+
+    @asyncio.coroutine
+    def get_user(self, **kwargs):
+        """Fetch information for the specified user.
+
+        If no user is specified, fetch information for the authorized
+        user.
+
+        :param id: User id to fetch
+        """
+        user_id = validation.USER_REQUEST(kwargs).get("id", "me")
+
+        _LOGGER.info("Fetching devices.")
+        resp = yield from self._get(const.USER_URL.format(user_id))
+        return data.User(resp)

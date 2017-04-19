@@ -217,3 +217,30 @@ def test_get_devices(session):
     assert device.url == "mock_url"
     assert device.id == "mock_id"
     assert device.version == 2
+
+
+def test_get_user(session):
+    """Test getting user information."""
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "url": "mock_url",
+        "id": "mock_id",
+        "username": "mock_username",
+        "first_name": "mock_firstname",
+        "email": "mock_email@example.com",
+    }
+    session._client_session.request.return_value = resp
+
+    user = session.loop.run_until_complete(session.get_user())
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/user/me"
+    assert user.url == "mock_url"
+    assert user.id == "mock_id"
+    assert user.username == "mock_username"
+    assert user.first_name == "mock_firstname"
+    assert user.last_name is None
+    assert user.email == "mock_email@example.com"

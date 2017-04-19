@@ -69,6 +69,10 @@ DEVICES_REQUEST = _REQUEST_BASE.extend({
     "limit": vol.All(int, vol.Range(min=1, max=250)),
 })
 
+USER_REQUEST = _REQUEST_BASE.extend({
+    "id": str,
+})
+
 _RESPONSE_BASE = vol.Schema({}, required=True, extra=vol.REMOVE_EXTRA)
 
 AUTH_TOKEN = _RESPONSE_BASE.extend({
@@ -172,4 +176,13 @@ DEVICE = _RESPONSE_BASE.extend({
     "version": int,
     opt("direct_access_token"): OPT_STR,
     opt("app_encryption_key"): OPT_STR,
+})
+
+USER = _RESPONSE_BASE.extend({
+    "url": str,
+    "id": str,
+    opt("username"): OPT_STR,
+    opt("first_name"): OPT_STR,
+    opt("last_name"): OPT_STR,
+    opt("email"): OPT_STR,
 })

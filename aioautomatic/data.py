@@ -43,3 +43,8 @@ class Trip(base.BaseDataObject):
 class Device(base.BaseDataObject):
     """Device object to manage access to a device information."""
     validator = validation.DEVICE
+
+
+class User(base.BaseDataObject):
+    """User object to manage access to user information."""
+    validator = validation.USER
