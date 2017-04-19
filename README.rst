@@ -46,6 +46,10 @@ Query for information from the users account.
             session = yield from client.create_session_from_password(
                     '<user_email>', '<user_password>')
 
+            # Fetch all devices associated with the user account
+            devices = yield from session.get_devices()
+            print(devices)
+
             # Fetch a list of vehicles associated with the user account
             vehicles = yield from session.get_vehicles()
             print(vehicles)
