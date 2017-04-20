@@ -35,6 +35,9 @@ Query for information from the users account.
     from datetime import datetime
     from datetime import timedelta
 
+    SCOPE = ['location', 'vehicle:profile', 'user:profile', 'trip']
+
+
     @asyncio.coroutine
     def loop():
         aiohttp_session = aiohttp.ClientSession()
@@ -44,7 +47,7 @@ Query for information from the users account.
                 '<secret>',
                 aiohttp_session)
             session = yield from client.create_session_from_password(
-                    '<user_email>', '<user_password>')
+                    SCOPE, '<user_email>', '<user_password>')
 
             # Fetch information about the authorized user
             user = yield from session.get_user()

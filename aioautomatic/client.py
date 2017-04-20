@@ -5,7 +5,6 @@ import logging
 
 from aioautomatic import base
 from aioautomatic import const
-from aioautomatic import exceptions
 from aioautomatic import session
 from aioautomatic import validation
 
@@ -32,9 +31,10 @@ class Client(base.BaseApiObject):
         self._client_secret = client_secret
 
     @asyncio.coroutine
-    def create_session_from_password(self, username, password):
+    def create_session_from_password(self, scope, username, password):
         """Create a session object authenticated by username and password.
 
+        :param scope: Requested API scope for this session
         :param username: User's Automatic account username
         :param username: User's Automatic account password
         :returns Session: Authenticated session object
@@ -46,17 +46,11 @@ class Client(base.BaseApiObject):
             'grant_type': 'password',
             'username': username,
             'password': password,
-            'scope': const.FULL_SCOPE,
+            'scope': ' '.join('scope:{}'.format(item) for item in scope),
             }
-        try:
-            resp = yield from self._post(const.AUTH_URL, auth_payload)
-        except exceptions.ForbiddenError:
-            auth_payload['scope'] = const.DEFAULT_SCOPE
-            resp = yield from self._post(const.AUTH_URL, auth_payload)
-            _LOGGER.debug("No client access to scope:current_location. "
-                          "Live location updates not available.")
-        resp = validation.AUTH_TOKEN(resp)
-        return session.Session(self, **resp)
+        resp = yield from self._post(const.AUTH_URL, auth_payload)
+        data = validation.AUTH_TOKEN(resp)
+        return session.Session(self, **data)
 
     @property
     def client_id(self):

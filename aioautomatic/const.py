@@ -8,7 +8,3 @@ USER_URL = '{}/user/{{}}'.format(BASE_API_URL)
 USER_METADATA_URL = '{}/user/{{}}/metadata'.format(BASE_API_URL)
 USER_PROFILE_URL = '{}/user/{{}}/profile'.format(BASE_API_URL)
 VEHICLE_URL = '{}/vehicle'.format(BASE_API_URL)
-
-DEFAULT_SCOPE = 'scope:location scope:vehicle:profile ' \
-                'scope:user:profile scope:trip'
-FULL_SCOPE = ' '.join((DEFAULT_SCOPE, 'scope:current_location'))
