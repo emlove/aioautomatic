@@ -34,10 +34,11 @@ def coerce_datetime(value):
                 value, DATETIME_FORMAT))
 
 
-OPT_STR = vol.Any(str, None)
-OPT_INT = vol.Any(int, None)
-OPT_FLOAT = vol.Any(float, None)
+OPT_BOOL = vol.Any(bool, None)
 OPT_DATETIME = vol.Any(coerce_datetime, None)
+OPT_FLOAT = vol.Any(float, None)
+OPT_INT = vol.Any(int, None)
+OPT_STR = vol.Any(str, None)
 
 
 _REQUEST_BASE = vol.Schema({}, required=False)
@@ -185,4 +186,24 @@ USER = _RESPONSE_BASE.extend({
     opt("first_name"): OPT_STR,
     opt("last_name"): OPT_STR,
     opt("email"): OPT_STR,
+})
+
+USER_PROFILE = _RESPONSE_BASE.extend({
+    "url": str,
+    opt("user"): OPT_STR,
+    opt("date_joined"): OPT_DATETIME,
+    # Tagged locations: No API reference documentation?
+})
+
+USER_METADATA = _RESPONSE_BASE.extend({
+    "url": str,
+    opt("user"): OPT_STR,
+    opt("firmware_version"): OPT_STR,
+    opt("app_version"): OPT_STR,
+    opt("os_version"): OPT_STR,
+    opt("device_type"): OPT_STR,
+    opt("phone_platform"): OPT_STR,
+    opt("is_app_latest_version"): OPT_BOOL,
+    opt("authenticated_clients"): vol.Any([str], None),
+    opt("is_staff"): OPT_BOOL,
 })

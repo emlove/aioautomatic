@@ -244,3 +244,41 @@ def test_get_user(session):
     assert user.first_name == "mock_firstname"
     assert user.last_name is None
     assert user.email == "mock_email@example.com"
+
+    session._client_session.request.reset_mock()
+    resp.json.return_value = {
+        "url": "mock_profile_url",
+        "user": "mock_user",
+        "date_joined": "2015-03-20T01:43:36.738000Z",
+    }
+    profile = session.loop.run_until_complete(user.get_profile())
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/user/mock_id/profile"
+    assert profile.url == "mock_profile_url"
+    assert profile.user == "mock_user"
+    assert profile.date_joined == datetime(
+        2015, 3, 20, 1, 43, 36, 738000, tzinfo=timezone.utc)
+
+    session._client_session.request.reset_mock()
+    resp.json.return_value = {
+        "url": "mock_metadata_url",
+        "user": "mock_user",
+        "firmware_version": "1.2.3.4",
+        "is_app_latest_version": False,
+        "is_staff": True,
+    }
+    metadata = session.loop.run_until_complete(user.get_metadata())
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/user/mock_id/metadata"
+    assert metadata.url == "mock_metadata_url"
+    assert metadata.user == "mock_user"
+    assert metadata.firmware_version == "1.2.3.4"
+    assert metadata.app_version is None
+    assert metadata.is_app_latest_version is False
+    assert metadata.is_staff is True

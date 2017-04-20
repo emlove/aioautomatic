@@ -48,17 +48,26 @@ Query for information from the users account.
 
             # Fetch information about the authorized user
             user = yield from session.get_user()
+            user_profile = yield from user.get_profile()
+            user_metadata = yield from user.get_metadata()
+            print("***USER***")
             print(user)
             print(user.email)
             print(user.first_name)
             print(user.last_name)
+            print(user_profile.date_joined)
+            print(user_metadata.firmware_version)
+            print(user_metadata.device_type)
+            print(user_metadata.phone_platform)
 
             # Fetch all devices associated with the user account
             devices = yield from session.get_devices()
+            print("***DEVICES***")
             print(devices)
 
             # Fetch a list of vehicles associated with the user account
             vehicles = yield from session.get_vehicles()
+            print("***VEHICLES***")
             print(vehicles)
             print(vehicles[0].make)
             print(vehicles[0].model)
@@ -67,6 +76,7 @@ Query for information from the users account.
             # Fetch a list of all trips in the last 10 days
             min_end_time = datetime.utcnow() - timedelta(days=10)
             trips = yield from session.get_trips(ended_at__gte=min_end_time, limit=10)
+            print("***TRIPS***")
             print(trips)
             print(trips[0].start_location.lat)
             print(trips[0].start_location.lon)

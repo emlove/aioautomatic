@@ -123,4 +123,4 @@ class Session(base.BaseApiObject):
 
         _LOGGER.info("Fetching devices.")
         resp = yield from self._get(const.USER_URL.format(user_id))
-        return data.User(resp)
+        return data.User(self, resp)
