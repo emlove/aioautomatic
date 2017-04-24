@@ -37,17 +37,22 @@ Query for information from the users account.
 
     SCOPE = ['location', 'vehicle:profile', 'user:profile', 'trip']
 
+    CLIENT_ID = '<client_id>'
+    SECRET_ID = '<secret>'
+    USER_EMAIL = '<user_email>'
+    USER_PASSWORD = '<user_password>'
+
 
     @asyncio.coroutine
     def loop():
         aiohttp_session = aiohttp.ClientSession()
         try:
             client = aioautomatic.Client(
-                '<client_id>',
-                '<secret>',
+                CLIENT_ID,
+                SECRET_ID,
                 aiohttp_session)
             session = yield from client.create_session_from_password(
-                    SCOPE, '<user_email>', '<user_password>')
+                    SCOPE, USER_EMAIL, USER_PASSWORD)
 
             # Fetch information about the authorized user
             user = yield from session.get_user()
