@@ -17,7 +17,8 @@ def opt(key):
     return vol.Optional(key, default=None)
 
 
-DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ%z'
+DATETIME_FORMAT_MS = '%Y-%m-%dT%H:%M:%S.%fZ%z'
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%SZ%z'
 
 
 def coerce_datetime(value):
@@ -25,13 +26,16 @@ def coerce_datetime(value):
     if isinstance(value, datetime):
         return value
 
+    value = '{}+0000'.format(value)
     try:
-        value = '{}+0000'.format(value)
-        return datetime.strptime(value, DATETIME_FORMAT)
+        return datetime.strptime(value, DATETIME_FORMAT_MS)
     except (TypeError, ValueError):
-        raise vol.DatetimeInvalid(
-            'Value {} does not match expected format {}'.format(
-                value, DATETIME_FORMAT))
+        try:
+            return datetime.strptime(value, DATETIME_FORMAT)
+        except (TypeError, ValueError):
+            raise vol.DatetimeInvalid(
+                'Value {} does not match expected format {}'.format(
+                    value, DATETIME_FORMAT))
 
 
 OPT_BOOL = vol.Any(bool, None)

@@ -30,6 +30,12 @@ def test_parse_datetime():
     assert validation.coerce_datetime("2014-03-20T01:43:36.738000Z") == dt
 
 
+def test_parse_datetime_no_ms():
+    """Test that a valid string without milliseconds is parsed."""
+    dt = datetime(2014, 3, 20, 1, 43, 36, tzinfo=timezone.utc)
+    assert validation.coerce_datetime("2014-03-20T01:43:36Z") == dt
+
+
 def test_invalid_datetime():
     """Test tahat an invalid string is not parsed."""
     with pytest.raises(validation.vol.DatetimeInvalid):
