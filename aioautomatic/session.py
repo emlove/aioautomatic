@@ -71,10 +71,10 @@ class Session(base.BaseApiObject):
         :param page: Page number of paginated result to return
         :param limit: Number of results per page
         """
-        querystring = gen_query_string(validation.VEHICLES_REQUEST(kwargs))
+        query = gen_query_string(validation.VEHICLES_REQUEST(kwargs))
 
         _LOGGER.info("Fetching vehicles.")
-        resp = yield from self._get('?'.join((const.VEHICLE_URL, querystring)))
+        resp = yield from self._get('?'.join((const.VEHICLES_URL, query)))
         return base.ResultList(self, resp, data.Vehicle)
 
     @asyncio.coroutine
@@ -90,10 +90,10 @@ class Session(base.BaseApiObject):
         :param page: Page number of paginated result to return
         :param limit: Number of results per page
         """
-        querystring = gen_query_string(validation.TRIPS_REQUEST(kwargs))
+        query = gen_query_string(validation.TRIPS_REQUEST(kwargs))
 
         _LOGGER.info("Fetching trips.")
-        resp = yield from self._get('?'.join((const.TRIP_URL, querystring)))
+        resp = yield from self._get('?'.join((const.TRIP_URL, query)))
         return base.ResultList(self, resp, data.Trip)
 
     @asyncio.coroutine
@@ -104,10 +104,10 @@ class Session(base.BaseApiObject):
         :param page: Page number of paginated result to return
         :param limit: Number of results per page
         """
-        querystring = gen_query_string(validation.DEVICES_REQUEST(kwargs))
+        query = gen_query_string(validation.DEVICES_REQUEST(kwargs))
 
         _LOGGER.info("Fetching devices.")
-        resp = yield from self._get('?'.join((const.DEVICE_URL, querystring)))
+        resp = yield from self._get('?'.join((const.DEVICES_URL, query)))
         return base.ResultList(self, resp, data.Device)
 
     @asyncio.coroutine

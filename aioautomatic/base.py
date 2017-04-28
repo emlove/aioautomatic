@@ -26,8 +26,8 @@ class BaseApiObject():
             self._request_kwargs.update(request_kwargs or {})
 
     @asyncio.coroutine
-    def _request(self, method, url, data):
-        """Wrapper for aiohttp request that returns a parsed dict."""
+    def _raw_request(self, method, url, data=None):
+        """Send the aiohttp request and return the response object."""
         try:
             _LOGGER.debug('Sending %s, to %s: %s', method, url, data)
             resp = yield from self._client_session.request(
@@ -47,7 +47,12 @@ class BaseApiObject():
                 pass
             raise status_exception(resp_json.get('error'),
                                    resp_json.get('error_description'))
+        return resp
 
+    @asyncio.coroutine
+    def _request(self, method, url, data=None):
+        """Wrapper for aiohttp request that returns a parsed dict."""
+        resp = yield from self._raw_request(method, url, data)
         try:
             return (yield from resp.json())
         except (aiohttp.client_exceptions.ClientResponseError,
@@ -61,7 +66,7 @@ class BaseApiObject():
         """
         return self._request(aiohttp.hdrs.METH_GET, url, data)
 
-    def _post(self, url, data):
+    def _post(self, url, data=None):
         """Wrapper for aiohttp post.
 
         This method is a coroutine.
@@ -82,30 +87,6 @@ class BaseApiObject():
     def request_kwargs(self):
         """kwargs that will be sent with each aiohttp request."""
         return self._request_kwargs
-
-
-class BaseDataObject():
-    """Object that represents data received from the API."""
-    validator = lambda self, value: {}  # noqa: E731
-
-    def __init__(self, data):
-        """Create the data object."""
-        self._data = self.validator(data)
-
-    def __getattr__(self, name):
-        """Lookup the attribute in the data dict."""
-        try:
-            return self._data[name]
-        except KeyError as exc:
-            raise AttributeError() from exc
-
-    def __repr__(self):
-        """Return a string representation of this object for debugging."""
-        if not hasattr(self, 'id'):
-            return super().__repr__()
-
-        return '<{}.{} id="{}">'.format(
-            self.__module__, self.__class__.__name__, self.id)
 
 
 class ResultList(BaseApiObject, list):
@@ -147,3 +128,36 @@ class ResultList(BaseApiObject, list):
     def previous(self):
         """Previous url to be fetched in the list."""
         return self._previous
+
+
+class BaseDataObject():
+    """Object that represents data received from the API."""
+    validator = lambda self, value: {}  # noqa: E731
+
+    def __init__(self, data):
+        """Create the data object."""
+        self._data = self.validator(data)
+
+    def __getattr__(self, name):
+        """Lookup the attribute in the data dict."""
+        try:
+            return self._data[name]
+        except KeyError as exc:
+            raise AttributeError() from exc
+
+    def __repr__(self):
+        """Return a string representation of this object for debugging."""
+        if not hasattr(self, 'id'):
+            return super().__repr__()
+
+        return '<{}.{} id="{}">'.format(
+            self.__module__, self.__class__.__name__, self.id)
+
+
+class BaseApiDataObject(BaseApiObject, BaseDataObject):
+    """Data object with methods to fetch further data."""
+
+    def __init__(self, parent, data):
+        """Create the data object."""
+        BaseApiObject.__init__(self, parent)
+        BaseDataObject.__init__(self, data)

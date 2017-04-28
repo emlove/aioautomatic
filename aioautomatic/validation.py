@@ -40,7 +40,7 @@ def coerce_datetime(value):
 
 OPT_BOOL = vol.Any(bool, None)
 OPT_DATETIME = vol.Any(coerce_datetime, None)
-OPT_FLOAT = vol.Any(float, None)
+OPT_FLOAT = vol.Any(vol.Coerce(float), None)
 OPT_INT = vol.Any(int, None)
 OPT_STR = vol.Any(str, None)
 
@@ -99,6 +99,12 @@ LIST_RESPONSE = _RESPONSE_BASE.extend({
     "results": [lambda _: _],  # Results are validated independently
 })
 
+VEHICLE_DTCS = _RESPONSE_BASE.extend({
+    opt("code"): OPT_STR,
+    opt("description"): OPT_STR,
+    opt("created_at"): OPT_DATETIME,
+})
+
 VEHICLE = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
@@ -111,14 +117,15 @@ VEHICLE = _RESPONSE_BASE.extend({
     opt("submodel"): OPT_STR,
     opt("display_name"): OPT_STR,
     opt("fuel_grade"): OPT_STR,
-    opt("fuel_level_percent"): vol.Any(float, None),
-    opt("battery_voltage"): vol.Any(float, None),
+    opt("fuel_level_percent"): vol.Any(vol.Coerce(float), None),
+    opt("battery_voltage"): vol.Any(vol.Coerce(float), None),
+    opt("active_dtcs"): vol.Any([VEHICLE_DTCS], None),
 })
 
 LOCATION = _RESPONSE_BASE.extend({
-    "lat": float,
-    "lon": float,
-    "accuracy_m": float,
+    "lat": vol.Coerce(float),
+    "lon": vol.Coerce(float),
+    "accuracy_m": vol.Coerce(float),
 })
 
 ADDRESS = _RESPONSE_BASE.extend({
@@ -142,7 +149,7 @@ VEHICLE_EVENT = _RESPONSE_BASE.extend({
 TRIP = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
-    "driver": OPT_STR,
+    opt("driver"): OPT_STR,
     opt("user"): OPT_STR,
     opt("started_at"): OPT_DATETIME,
     opt("ended_at"): OPT_DATETIME,
@@ -171,8 +178,8 @@ TRIP = _RESPONSE_BASE.extend({
     opt("city_fraction"): OPT_FLOAT,
     opt("highway_fraction"): OPT_FLOAT,
     opt("night_driving_fraction"): OPT_FLOAT,
-    opt("idling_time_s"): OPT_INT,
-    "tags": [str],
+    opt("idling_time_s"): OPT_FLOAT,
+    opt("tags"): vol.Any([str], None),
 })
 
 DEVICE = _RESPONSE_BASE.extend({
@@ -210,4 +217,65 @@ USER_METADATA = _RESPONSE_BASE.extend({
     opt("is_app_latest_version"): OPT_BOOL,
     opt("authenticated_clients"): vol.Any([str], None),
     opt("is_staff"): OPT_BOOL,
+})
+
+REALTIME_DEVICE = _RESPONSE_BASE.extend({
+    "id": str,
+})
+
+REALTIME_LOCATION = LOCATION.extend({
+    opt("created_at"): OPT_DATETIME,
+})
+
+REALTIME_BASE = _RESPONSE_BASE.extend({
+    "id": str,
+    "user": {
+        "id": str,
+        "url": str,
+        },
+    "type": vol.In([
+        "trip:finished",
+        "ignition:on",
+        "ignition:off",
+        "notification:speeding",
+        "notification:hard_brake",
+        "notification:hard_accel",
+        "mil:on",
+        "mil:off",
+        "location:updated",
+        ]),
+    opt("created_at"): OPT_DATETIME,
+    opt("time_zone"): OPT_STR,
+    opt("location"): vol.Any(REALTIME_LOCATION, None),
+    "vehicle": {
+        "id": str,
+        "url": str,
+        },
+    "device": {
+        "id": str,
+        },
+})
+
+REALTIME_TRIP_FINISHED = REALTIME_BASE.extend({
+    "trip": TRIP,
+})
+
+REALTIME_SPEEDING = REALTIME_BASE.extend({
+    "velocity_kph": vol.Coerce(float),
+})
+
+REALTIME_HARD_BRAKE = REALTIME_BASE.extend({
+    "g_force": vol.Coerce(float),
+})
+
+REALTIME_MIL_ON = REALTIME_BASE.extend({
+    "dtcs": [VEHICLE_DTCS],
+})
+
+REALTIME_MIL_OFF = REALTIME_MIL_ON.extend({
+    "user_cleared": bool,
+})
+
+REALTIME_HARD_ACCEL = REALTIME_BASE.extend({
+    "g_force": vol.Coerce(float),
 })

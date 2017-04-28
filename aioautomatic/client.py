@@ -1,11 +1,22 @@
 """Client interface for aioautomatic."""
 
 import asyncio
+import json
 import logging
+import time
+
+import aiohttp
+from aiohttp import ClientError
+from aiohttp.http_exceptions import HttpProcessingError
 
 from aioautomatic import base
 from aioautomatic import const
+from aioautomatic import exceptions
 from aioautomatic import session
+from aioautomatic.data import REALTIME_EVENT_CLASS
+from aioautomatic.socketio import (
+    decode_engineIO_content, ATTR_SESSION_ID, ATTR_PING_TIMEOUT,
+    ATTR_PING_INTERVAL, ATTR_PING_TIMEOUT_HANDLE, ATTR_PING_INTERVAL_HANDLE)
 from aioautomatic import validation
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,6 +40,8 @@ class Client(base.BaseApiObject):
         super().__init__(None, request_kwargs, client_session)
         self._client_id = client_id
         self._client_secret = client_secret
+        self._ws_connection = None
+        self._ws_session_data = None
 
     @asyncio.coroutine
     def create_session_from_password(self, scope, username, password):
@@ -51,6 +64,187 @@ class Client(base.BaseApiObject):
         resp = yield from self._post(const.AUTH_URL, auth_payload)
         data = validation.AUTH_TOKEN(resp)
         return session.Session(self, **data)
+
+    @asyncio.coroutine
+    def _get_engineio_session(self):
+        """Connect to server and get an engineIO session."""
+        # Automatic's websocket API is built on top of the engineIO API.
+        # We have to first open an engineIO session before we can open the
+        # websocket connection.
+        params = {
+            'EIO': 3,
+            'transport': 'polling',
+            'token': '{}:{}'.format(self.client_id, self.client_secret),
+            't': '{}-0'.format(time.time()),
+        }
+        url = const.WEBSOCKET_SESSION_URL.format(
+            '&'.join('{}={}'.format(k, v) for k, v in params.items()))
+        resp = yield from self._raw_request(aiohttp.hdrs.METH_GET, url)
+        data = yield from resp.read()
+        packet_type, packet_data = next(decode_engineIO_content(data))
+        packet_str = packet_data.decode('utf-8')
+        if packet_type != 0:
+            raise exceptions.TransportError(
+                'engineIO packet is not open type: {}'.format(packet_str))
+        session_data = json.loads(packet_str)
+
+        # Convert from ms to seconds
+        session_data[ATTR_PING_TIMEOUT] /= 1000.0
+        session_data[ATTR_PING_INTERVAL] /= 1000.0
+
+        return session_data
+
+    @asyncio.coroutine
+    def _get_ws_connection(self, session_data):
+        """Open a websocket connection with an engineIO session."""
+        params = {
+            'EIO': 3,
+            'transport': 'websocket',
+            'token': '{}:{}'.format(self.client_id, self.client_secret),
+            'sid': session_data[ATTR_SESSION_ID],
+        }
+        url = const.WEBSOCKET_URL.format(
+            '&'.join('{}={}'.format(k, v) for k, v in params.items()))
+        ws_connection = yield from self._client_session.ws_connect(
+            url, timeout=session_data['pingTimeout'])
+
+        # Send engineIO probe message
+        yield from ws_connection.send_str('2probe')
+        resp = yield from ws_connection.receive_str()
+        if resp != '3probe':
+            raise exceptions.TransportError(
+                'engineIO probe response packet not received: {}'.format(resp))
+
+        # Send engineIO connection upgrade packet
+        yield from ws_connection.send_str('5')
+        resp = yield from ws_connection.receive_str()
+        if resp != '40':
+            raise exceptions.TransportError(
+                'socketIO connect packet not received: {}'.format(resp))
+
+        return ws_connection
+
+    @asyncio.coroutine
+    def ws_connect(self):
+        """Open a websocket connection for real time events."""
+        if self.ws_connected:
+            raise exceptions.TransportError('Connection already open.')
+
+        _LOGGER.info("Opening websocket connection.")
+        try:
+            # Open an engineIO session
+            session_data = yield from self._get_engineio_session()
+
+            # Now that the session data has been fetched, open the actual
+            # websocket connection.
+            ws_connection = yield from self._get_ws_connection(session_data)
+
+            # Finalize connection status
+            self._ws_connection = ws_connection
+            self._ws_session_data = session_data
+
+            # Send the first ping packet
+            self.loop.create_task(self._ping())
+        except (ClientError, HttpProcessingError, asyncio.TimeoutError) as exc:
+            raise exceptions.TransportError from exc
+        return self.loop.create_task(self._ws_loop())
+
+    @asyncio.coroutine
+    def _ping(self):
+        """Send the ping packet and wait for a response."""
+        yield from self._ws_connection.send_str('2')
+
+        handle = self._ws_session_data.get(ATTR_PING_TIMEOUT_HANDLE)
+        if handle:
+            handle.cancel()
+
+        self._ws_session_data[ATTR_PING_TIMEOUT_HANDLE] = self.loop.call_later(
+            self._ws_session_data[ATTR_PING_TIMEOUT],
+            lambda: self.loop.create_task(self.ws_close()))
+
+    def _handle_packet(self, data):
+        """Handle an incoming engineIO packet."""
+        # engineIO Ping response received. Schedule next ping.
+        if data == '3':
+            handle = self._ws_session_data.get(ATTR_PING_INTERVAL_HANDLE)
+            if handle:
+                handle.cancel()
+
+            self._ws_session_data[ATTR_PING_INTERVAL_HANDLE] = \
+                self.loop.call_later(
+                    self._ws_session_data[ATTR_PING_INTERVAL],
+                    lambda: self.loop.create_task(self._ping()))
+            return
+
+        # socketIO event
+        if data.startswith('42'):
+            msg = json.loads(data[2:])
+            name = msg[0]
+            event = msg[1]
+
+            event_class = REALTIME_EVENT_CLASS.get(name)
+            if event_class is None:
+                _LOGGER.error('Invalid event %s received from Automatic', name)
+                _LOGGER.debug(event)
+                return
+
+            self._handle_event(name, event_class(self, event))
+            return
+
+        # socketIO error
+        if data.startswith('44'):
+            msg = json.loads(data[2:])
+            self._handle_event('error', msg)
+            return
+
+        _LOGGER.debug('Unhandled packet %s', data)
+
+    def _handle_event(self, name, event):
+        """Handle an incoming realtime event object."""
+        pass
+
+    @asyncio.coroutine
+    def _ws_loop(self):
+        """Run the websocket loop listening for messages."""
+        msg = None
+        try:
+            while True:
+                msg = yield from self._ws_connection.receive()
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    self._handle_packet(msg.data)
+                elif msg.type == aiohttp.WSMsgType.CLOSED:
+                    break
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    break
+        except (ClientError, HttpProcessingError, asyncio.TimeoutError) as exc:
+            raise exceptions.TransportError from exc
+        finally:
+            yield from self.ws_close()
+            self._handle_event('closed', None)
+            if msg is not None and msg.type == aiohttp.WSMsgType.ERROR:
+                raise exceptions.TransportError(
+                    'Websocket error detected. Connection closed.')
+
+    @asyncio.coroutine
+    def ws_close(self):
+        """Close the websocket connection."""
+        if not self.ws_connected:
+            return
+
+        # Try to gracefully end the connection
+        try:
+            yield from self._ws_connection.send_str('41')
+            yield from self._ws_connection.send_str('1')
+        except (ClientError, HttpProcessingError, asyncio.TimeoutError):
+            pass
+        yield from self._ws_connection.close()
+        self._ws_connection = None
+        self._ws_session_data = None
+
+    @property
+    def ws_connected(self):
+        """Websocket is connected."""
+        return self._ws_connection is not None
 
     @property
     def client_id(self):
