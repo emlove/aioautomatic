@@ -1,6 +1,7 @@
 """Client interface for aioautomatic."""
 
 import asyncio
+import itertools
 import json
 import logging
 import time
@@ -13,6 +14,7 @@ from aioautomatic import base
 from aioautomatic import const
 from aioautomatic import exceptions
 from aioautomatic import session
+from aioautomatic.const import EVENT_WS_ERROR, EVENT_WS_CLOSED
 from aioautomatic.data import REALTIME_EVENT_CLASS
 from aioautomatic.socketio import (
     decode_engineIO_content, ATTR_SESSION_ID, ATTR_PING_TIMEOUT,
@@ -20,6 +22,9 @@ from aioautomatic.socketio import (
 from aioautomatic import validation
 
 _LOGGER = logging.getLogger(__name__)
+
+VALID_CALLBACKS = tuple(itertools.chain(
+    (EVENT_WS_ERROR, EVENT_WS_CLOSED), REALTIME_EVENT_CLASS))
 
 
 class Client(base.BaseApiObject):
@@ -42,6 +47,7 @@ class Client(base.BaseApiObject):
         self._client_secret = client_secret
         self._ws_connection = None
         self._ws_session_data = None
+        self._ws_callbacks = {k: [] for k in VALID_CALLBACKS}
 
     @asyncio.coroutine
     def create_session_from_password(self, scope, username, password):
@@ -194,14 +200,15 @@ class Client(base.BaseApiObject):
         # socketIO error
         if data.startswith('44'):
             msg = json.loads(data[2:])
-            self._handle_event('error', msg)
+            self._handle_event(EVENT_WS_ERROR, msg)
             return
 
         _LOGGER.debug('Unhandled packet %s', data)
 
     def _handle_event(self, name, event):
         """Handle an incoming realtime event object."""
-        pass
+        for callback in self._ws_callbacks[name]:
+            self.loop.call_soon(callback, name, event)
 
     @asyncio.coroutine
     def _ws_loop(self):
@@ -220,7 +227,7 @@ class Client(base.BaseApiObject):
             raise exceptions.TransportError from exc
         finally:
             yield from self.ws_close()
-            self._handle_event('closed', None)
+            self._handle_event(EVENT_WS_CLOSED, None)
             if msg is not None and msg.type == aiohttp.WSMsgType.ERROR:
                 raise exceptions.TransportError(
                     'Websocket error detected. Connection closed.')
@@ -240,6 +247,68 @@ class Client(base.BaseApiObject):
         yield from self._ws_connection.close()
         self._ws_connection = None
         self._ws_session_data = None
+
+    def on(self, event, callback):  # pylint: disable=invalid-name
+        """Register a callback to be run on a websocket event.
+
+        Valid realtime events can be found in Automatic's documentation.
+        In addition, the events "error" and "closed" can be registered.
+        "error" will be called if an error is sent from Automatic's
+        servers via websocket. "closed" will be called once when the
+        websocket connection is closed.
+
+        The callback must accept two positional parameters. The first
+        contians the name of the event triggering  the callback. The
+        second contains the event data. For realtime events, this will
+        contain a subclass of aioautomatic.data.BaseRealtimeEvent. An
+        "error" callback will pass a string containing the data received
+        from Automatic, and "closed" will pass None.
+
+        https://developer.automatic.com/api-reference/#real-time-events
+
+        :param event: Realtime event to trigger the callback
+        :param callback: Callback to be run when the event occurs
+        :returns remove: Callable to unregister this callback
+        """
+        if event not in VALID_CALLBACKS:
+            raise ValueError(
+                '{} is not a valid callback. Valid callbacks are {}'.format(
+                    event, VALID_CALLBACKS))
+
+        self._ws_callbacks[event].append(callback)
+
+        def remove_callable():
+            """Callable to remove the registered callback."""
+            self._ws_callbacks[event].remove(callback)
+
+        return remove_callable
+
+    def on_app_event(self, callback):
+        """Register a callback to be run on all Automatic events.
+
+        This is a helper function that wraps Client.on. The callback
+        passed here will be registered for all vehicle status events
+        sent from Automatic. It will not be registered for "error" or
+        "closed" events.
+
+        The callback must accept two positional parameters. The first
+        contians the name of the event triggering  the callback. The
+        second contains the event data. This will contain a subclass of
+        aioautomatic.data.BaseRealtimeEvent.
+
+        :param callback: Callback to be run when an event occurs
+        :returns remove: Callable to unregister this callback
+        """
+        removes = []
+        for event in REALTIME_EVENT_CLASS:
+            removes.append(self.on(event, callback))
+
+        def remove_callable():
+            """Callable to remove the registered callback."""
+            for remove in removes:
+                remove()
+
+        return remove_callable
 
     @property
     def ws_connected(self):

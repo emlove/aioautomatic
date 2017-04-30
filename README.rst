@@ -102,6 +102,59 @@ Query for information from the users account.
 
     asyncio.get_event_loop().run_until_complete(loop())
 
+Open a websocket connection for realtime updates
+
+.. code-block:: python
+
+    import asyncio
+    import aioautomatic
+    import aiohttp
+
+    SCOPE = ['current_location', 'location', 'vehicle:profile', 'user:profile', 'trip']
+
+    CLIENT_ID = '<client_id>'
+    SECRET_ID = '<secret>'
+    USER_EMAIL = '<user_email>'
+    USER_PASSWORD = '<user_password>'
+
+
+    def error_callback(name, message):
+        print(message)
+
+
+    def event_callback(name, data):
+        print(name)
+        if data.location:
+            print(data.location.lat)
+            print(data.location.lon)
+
+
+    def speeding_callback(name, data):
+        print("Speeding! Velocity: {:1.2f} KPH".format(data.velocity_kph))
+
+
+    @asyncio.coroutine
+    def loop():
+        aiohttp_session = aiohttp.ClientSession()
+        try:
+            client = aioautomatic.Client(
+                CLIENT_ID,
+                SECRET_ID,
+                aiohttp_session)
+
+            client.on('closed', closed_callback)
+            client.on('notification:speeding', speeding_callback)
+            client.on_app_event(callback)
+            future = yield from client.ws_connect()
+
+            # Run until websocket is closed
+            yield from future
+
+        finally:
+            yield from aiohttp_session.close()
+
+    asyncio.get_event_loop().run_until_complete(loop())
+
 Credits
 ---------
 

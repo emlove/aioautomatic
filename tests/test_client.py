@@ -575,3 +575,79 @@ def test_ws_close_exception(client):
     assert mock_ws.send_str.called
     assert len(mock_ws.send_str.mock_calls) == 1
     assert mock_ws.send_str.mock_calls[0][1][0] == '41'
+
+
+def test_on_invalid_event(client):
+    """Test registration attempt to invalid event."""
+    with pytest.raises(ValueError) as exc:
+        client.on('invalid_event', None)
+
+    assert str(exc.value)[:38] == 'invalid_event is not a valid callback.'
+
+
+def test_on_event(client):
+    """Test event handler registration and removal."""
+    mock_calls = []
+
+    def callback(event, data):
+        """Mock callback."""
+        mock_calls.append((event, data))
+
+    remove = client.on('location:updated', callback)
+
+    client._handle_event('location:updated', 'mock_data_1')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 1
+    assert mock_calls[0] == ('location:updated', 'mock_data_1')
+    mock_calls = []
+
+    remove()
+
+    client._handle_event('location:updated', 'mock_data_1')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 0
+
+
+def test_on_app_event(client):
+    """Test app event handler registration and removal."""
+    mock_calls = []
+
+    def callback(event, data):
+        """Mock callback."""
+        mock_calls.append((event, data))
+
+    remove = client.on_app_event(callback)
+
+    client._handle_event('location:updated', 'mock_data_1')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 1
+    assert mock_calls[0] == ('location:updated', 'mock_data_1')
+    mock_calls = []
+
+    client._handle_event('notification:speeding', 'mock_data_2')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 1
+    assert mock_calls[0] == ('notification:speeding', 'mock_data_2')
+    mock_calls = []
+
+    client._handle_event('closed', None)
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 0
+    mock_calls = []
+
+    remove()
+
+    client._handle_event('location:updated', 'mock_data_1')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 0
+
+    client._handle_event('notification:speeding', 'mock_data_2')
+    tasks = asyncio.Task.all_tasks(client.loop)
+    client.loop.run_until_complete(asyncio.gather(*tasks, loop=client.loop))
+    assert len(mock_calls) == 0
