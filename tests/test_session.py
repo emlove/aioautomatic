@@ -282,3 +282,85 @@ def test_get_user(session):
     assert metadata.app_version is None
     assert metadata.is_app_latest_version is False
     assert metadata.is_staff is True
+
+
+def test_get_trip(session):
+    """Test getting trip information."""
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "url": "mock_url",
+        "id": "mock_id",
+        "start_location": {
+            "lat": 43.12345,
+            "lon": 34.54321,
+            "accuracy_m": 12.2,
+            },
+        "end_location": {
+            "lat": 53.12345,
+            "lon": 44.54321,
+            "accuracy_m": 11.2,
+            },
+        "start_address": {
+            "name": "123 Fake St",
+            },
+        "end_address": {
+            "name": "456 Elm",
+            },
+    }
+    session._client_session.request.return_value = resp
+
+    trip = session.loop.run_until_complete(session.get_trip("mock_id"))
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/trip/mock_id"
+    assert trip.url == "mock_url"
+    assert trip.id == "mock_id"
+    assert trip.start_location.lat == 43.12345
+    assert trip.start_location.lon == 34.54321
+
+
+def test_get_vehicle(session):
+    """Test getting vehicle information."""
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "url": "mock_url",
+        "id": "mock_id",
+        "display_name": "Geo Metro",
+    }
+    session._client_session.request.return_value = resp
+
+    vehicle = session.loop.run_until_complete(session.get_vehicle("mock_id"))
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/vehicle/mock_id"
+    assert vehicle.url == "mock_url"
+    assert vehicle.id == "mock_id"
+    assert vehicle.display_name == "Geo Metro"
+
+
+def test_get_device(session):
+    """Test getting device information."""
+    resp = AsyncMock()
+    resp.status = 200
+    resp.json.return_value = {
+        "url": "mock_url",
+        "id": "mock_id",
+        "version": 2,
+    }
+    session._client_session.request.return_value = resp
+
+    device = session.loop.run_until_complete(session.get_device("mock_id"))
+    assert session._client_session.request.called
+    assert len(session._client_session.request.mock_calls) == 2
+    assert session._client_session.request.mock_calls[0][1][0] == "GET"
+    assert session._client_session.request.mock_calls[0][1][1] == \
+        "https://api.automatic.com/device/mock_id"
+    assert device.url == "mock_url"
+    assert device.id == "mock_id"
+    assert device.version == 2

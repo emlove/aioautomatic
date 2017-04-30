@@ -60,6 +60,16 @@ class Session(base.BaseApiObject):
         self._load_token_data(**resp)
 
     @asyncio.coroutine
+    def get_vehicle(self, vehicle_id):
+        """Get a single vehicle associated with this user account.
+
+        :param vehicle_id: Vehicle ID to fetch
+        """
+        _LOGGER.info("Fetching vehicle.")
+        resp = yield from self._get(const.VEHICLE_URL.format(vehicle_id))
+        return data.Vehicle(resp)
+
+    @asyncio.coroutine
     def get_vehicles(self, **kwargs):
         """Get all vehicles associated with this user account.
 
@@ -78,6 +88,16 @@ class Session(base.BaseApiObject):
         return base.ResultList(self, resp, data.Vehicle)
 
     @asyncio.coroutine
+    def get_trip(self, trip_id):
+        """Get a single trip associated with this user account.
+
+        :param trip_id: Trip ID to fetch
+        """
+        _LOGGER.info("Fetching trip.")
+        resp = yield from self._get(const.TRIP_URL.format(trip_id))
+        return data.Trip(resp)
+
+    @asyncio.coroutine
     def get_trips(self, **kwargs):
         """Get all vehicles associated with this user account.
 
@@ -93,8 +113,18 @@ class Session(base.BaseApiObject):
         query = gen_query_string(validation.TRIPS_REQUEST(kwargs))
 
         _LOGGER.info("Fetching trips.")
-        resp = yield from self._get('?'.join((const.TRIP_URL, query)))
+        resp = yield from self._get('?'.join((const.TRIPS_URL, query)))
         return base.ResultList(self, resp, data.Trip)
+
+    @asyncio.coroutine
+    def get_device(self, device_id):
+        """Get a single device associated with this user account.
+
+        :param device_id: Device ID to fetch
+        """
+        _LOGGER.info("Fetching device.")
+        resp = yield from self._get(const.DEVICE_URL.format(device_id))
+        return data.Device(resp)
 
     @asyncio.coroutine
     def get_devices(self, **kwargs):
