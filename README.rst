@@ -114,8 +114,6 @@ Open a websocket connection for realtime updates
 
     CLIENT_ID = '<client_id>'
     SECRET_ID = '<secret>'
-    USER_EMAIL = '<user_email>'
-    USER_PASSWORD = '<user_password>'
 
 
     def error_callback(name, message):
