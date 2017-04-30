@@ -17,6 +17,14 @@ class InvalidResponseError(ProtocolError):
     """The response returned from Automatic is not valid json."""
 
 
+class SocketIOError(ProtocolError):
+    """SocketIO error message received."""
+
+
+class UnauthorizedClientError(SocketIOError):
+    """Client is unauthorized for requested function."""
+
+
 class HttpStatusError(ProtocolError):
     """Exception raised from the HTTP response status code."""
 
@@ -64,3 +72,14 @@ HTTP_EXCEPTIONS = {
     422: UnprocessableDataError,
     500: InternalError,
 }
+
+# Exceptions to be raised based on socketIO error messages
+SOCKETIO_ERROR_EXCEPTIONS = {
+    "Unauthorized client.": UnauthorizedClientError,
+}
+
+
+def get_socketio_error(msg=None):
+    """Return a new socketIO error for the given message."""
+    error = SOCKETIO_ERROR_EXCEPTIONS.get(msg, SocketIOError)
+    return error(msg)

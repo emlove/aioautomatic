@@ -118,14 +118,21 @@ class Client(base.BaseApiObject):
         yield from ws_connection.send_str('2probe')
         resp = yield from ws_connection.receive_str()
         if resp != '3probe':
-            raise exceptions.TransportError(
+            raise exceptions.ProtocolError(
                 'engineIO probe response packet not received: {}'.format(resp))
 
         # Send engineIO connection upgrade packet
         yield from ws_connection.send_str('5')
         resp = yield from ws_connection.receive_str()
         if resp != '40':
-            raise exceptions.TransportError(
+            if resp.startswith('44'):
+                try:
+                    # If a valid message was sent, raise the appropriate error
+                    msg = json.loads(resp[2:])
+                    raise exceptions.get_socketio_error(msg)
+                except ValueError:
+                    pass
+            raise exceptions.ProtocolError(
                 'socketIO connect packet not received: {}'.format(resp))
 
         return ws_connection

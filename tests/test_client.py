@@ -195,12 +195,41 @@ def test_get_ws_connection_probe_error(client):
         "pingTimeout": 12.345,
         "pingInterval": 23.456,
     }
-    with pytest.raises(exceptions.TransportError) as exc:
+    with pytest.raises(exceptions.ProtocolError) as exc:
         client.loop.run_until_complete(
             client._get_ws_connection(session_data))
 
     assert str(exc.value) == \
         "engineIO probe response packet not received: 4Probe Error"
+
+
+def test_get_ws_connection_unauthorized_client(client):
+    """Test error opening a websocket connection with an engineIO session."""
+    mock_ws = AsyncMock()
+    receive_queue = asyncio.Queue(loop=client.loop)
+    mock_ws.receive_str = receive_queue.get
+
+    @asyncio.coroutine
+    def mock_send_str(data):
+        if data == "2probe":
+            yield from receive_queue.put("3probe")
+            return
+
+        if data == "5":
+            yield from receive_queue.put('44"Unauthorized client."')
+
+    mock_ws.send_str = mock_send_str
+    client._client_session.ws_connect.return_value = mock_ws
+    session_data = {
+        "sid": "mock_session_id",
+        "pingTimeout": 12.345,
+        "pingInterval": 23.456,
+    }
+    with pytest.raises(exceptions.UnauthorizedClientError) as exc:
+        client.loop.run_until_complete(
+            client._get_ws_connection(session_data))
+
+    assert str(exc.value) == "Unauthorized client."
 
 
 def test_get_ws_connection_upgrade_error(client):
@@ -216,7 +245,7 @@ def test_get_ws_connection_upgrade_error(client):
             return
 
         if data == "5":
-            yield from receive_queue.put("44socketIO Error")
+            yield from receive_queue.put('44"socketIO Mock Error"')
 
     mock_ws.send_str = mock_send_str
     client._client_session.ws_connect.return_value = mock_ws
@@ -225,12 +254,65 @@ def test_get_ws_connection_upgrade_error(client):
         "pingTimeout": 12.345,
         "pingInterval": 23.456,
     }
-    with pytest.raises(exceptions.TransportError) as exc:
+    with pytest.raises(exceptions.SocketIOError) as exc:
         client.loop.run_until_complete(
             client._get_ws_connection(session_data))
 
-    assert str(exc.value) == \
-        "socketIO connect packet not received: 44socketIO Error"
+    assert str(exc.value) == "socketIO Mock Error"
+
+
+def test_get_ws_connection_invalid_error(client):
+    """Test error opening a websocket connection with an engineIO session."""
+    mock_ws = AsyncMock()
+    receive_queue = asyncio.Queue(loop=client.loop)
+    mock_ws.receive_str = receive_queue.get
+
+    @asyncio.coroutine
+    def mock_send_str(data):
+        if data == "2probe":
+            yield from receive_queue.put("3probe")
+            return
+
+        if data == "5":
+            yield from receive_queue.put('44[[[')
+
+    mock_ws.send_str = mock_send_str
+    client._client_session.ws_connect.return_value = mock_ws
+    session_data = {
+        "sid": "mock_session_id",
+        "pingTimeout": 12.345,
+        "pingInterval": 23.456,
+    }
+    with pytest.raises(exceptions.ProtocolError):
+        client.loop.run_until_complete(
+            client._get_ws_connection(session_data))
+
+
+def test_get_ws_connection_invalid_packet(client):
+    """Test error opening a websocket connection with an engineIO session."""
+    mock_ws = AsyncMock()
+    receive_queue = asyncio.Queue(loop=client.loop)
+    mock_ws.receive_str = receive_queue.get
+
+    @asyncio.coroutine
+    def mock_send_str(data):
+        if data == "2probe":
+            yield from receive_queue.put("3probe")
+            return
+
+        if data == "5":
+            yield from receive_queue.put('ABCDEF')
+
+    mock_ws.send_str = mock_send_str
+    client._client_session.ws_connect.return_value = mock_ws
+    session_data = {
+        "sid": "mock_session_id",
+        "pingTimeout": 12.345,
+        "pingInterval": 23.456,
+    }
+    with pytest.raises(exceptions.ProtocolError):
+        client.loop.run_until_complete(
+            client._get_ws_connection(session_data))
 
 
 def test_ws_connect(client):
