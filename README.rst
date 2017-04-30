@@ -156,8 +156,11 @@ Open a websocket connection for realtime updates
 Credits
 ---------
 
+This package is built on aiohttp_, which provides the foundation for async HTTP and websocket calls.
+
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
+.. _aiohttp: http://aiohttp.readthedocs.io/en/stable/
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 
