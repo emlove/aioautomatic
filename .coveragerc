@@ -2,6 +2,10 @@
 branch = True
 source = aioautomatic
 
+# These are external helpers copied here. We aren't testing them directly.
+omit =
+    aioautomatic/socketio.py
+
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
