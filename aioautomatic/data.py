@@ -184,6 +184,10 @@ class RealtimeLocationUpdated(BaseRealtimeEvent):
     """Realtime location updated event object"""
 
 
+class RealtimeVehicleStatusReport(BaseRealtimeEvent):
+    """Realtime vehicle status report event object"""
+
+
 REALTIME_EVENT_CLASS = {
     'trip:finished': RealtimeTripFinished,
     'ignition:on': RealtimeIgnitionOn,
@@ -194,4 +198,5 @@ REALTIME_EVENT_CLASS = {
     'mil:on': RealtimeMILOn,
     'mil:off': RealtimeMILOff,
     'location:updated': RealtimeLocationUpdated,
+    'vehicle:status_report': RealtimeVehicleStatusReport,
 }

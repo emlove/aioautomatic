@@ -105,6 +105,16 @@ VEHICLE_DTCS = _RESPONSE_BASE.extend({
     opt("created_at"): OPT_DATETIME,
 })
 
+LOCATION = _RESPONSE_BASE.extend({
+    "lat": vol.Coerce(float),
+    "lon": vol.Coerce(float),
+    "accuracy_m": vol.Coerce(float),
+})
+
+REALTIME_LOCATION = LOCATION.extend({
+    opt("created_at"): OPT_DATETIME,
+})
+
 VEHICLE = _RESPONSE_BASE.extend({
     "url": str,
     "id": str,
@@ -120,12 +130,7 @@ VEHICLE = _RESPONSE_BASE.extend({
     opt("fuel_level_percent"): vol.Any(vol.Coerce(float), None),
     opt("battery_voltage"): vol.Any(vol.Coerce(float), None),
     opt("active_dtcs"): vol.Any([VEHICLE_DTCS], None),
-})
-
-LOCATION = _RESPONSE_BASE.extend({
-    "lat": vol.Coerce(float),
-    "lon": vol.Coerce(float),
-    "accuracy_m": vol.Coerce(float),
+    opt("latest_location"): vol.Any(REALTIME_LOCATION, None),
 })
 
 ADDRESS = _RESPONSE_BASE.extend({
@@ -183,9 +188,9 @@ TRIP = _RESPONSE_BASE.extend({
 })
 
 DEVICE = _RESPONSE_BASE.extend({
-    "url": str,
     "id": str,
-    "version": int,
+    opt("url"): OPT_STR,
+    opt("version"): OPT_INT,
     opt("direct_access_token"): OPT_STR,
     opt("app_encryption_key"): OPT_STR,
 })
@@ -223,16 +228,9 @@ REALTIME_DEVICE = _RESPONSE_BASE.extend({
     "id": str,
 })
 
-REALTIME_LOCATION = LOCATION.extend({
-    opt("created_at"): OPT_DATETIME,
-})
-
 REALTIME_BASE = _RESPONSE_BASE.extend({
     "id": str,
-    "user": {
-        "id": str,
-        "url": str,
-        },
+    "user": USER,
     "type": vol.In([
         "trip:finished",
         "ignition:on",
@@ -243,17 +241,13 @@ REALTIME_BASE = _RESPONSE_BASE.extend({
         "mil:on",
         "mil:off",
         "location:updated",
+        "vehicle:status_report",
         ]),
     opt("created_at"): OPT_DATETIME,
     opt("time_zone"): OPT_STR,
     opt("location"): vol.Any(REALTIME_LOCATION, None),
-    "vehicle": {
-        "id": str,
-        "url": str,
-        },
-    "device": {
-        "id": str,
-        },
+    "vehicle": VEHICLE,
+    "device": DEVICE,
 })
 
 REALTIME_TRIP_FINISHED = REALTIME_BASE.extend({
