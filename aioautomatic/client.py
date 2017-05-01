@@ -251,6 +251,15 @@ class Client(base.BaseApiObject):
             yield from self._ws_connection.send_str('1')
         except (ClientError, HttpProcessingError, asyncio.TimeoutError):
             pass
+
+        # Close any remaining ping handles
+        handle = self._ws_session_data.get(ATTR_PING_INTERVAL_HANDLE)
+        if handle:
+            handle.cancel()
+        handle = self._ws_session_data.get(ATTR_PING_TIMEOUT_HANDLE)
+        if handle:
+            handle.cancel()
+
         yield from self._ws_connection.close()
         self._ws_connection = None
         self._ws_session_data = None

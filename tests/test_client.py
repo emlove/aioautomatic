@@ -634,6 +634,32 @@ def test_ws_loop_exception(client):
     assert client._handle_event.mock_calls[0][1][1] is None
 
 
+def test_ws_close(client):
+    """Test websocket close."""
+    mock_ws = AsyncMock()
+    interval_mock = MagicMock()
+    timeout_mock = MagicMock()
+
+    client._ws_connection = mock_ws
+    client._ws_session_data = {
+        'pingIntervalHandle': interval_mock,
+        'pingTimeoutHandle': timeout_mock,
+    }
+
+    client.loop.run_until_complete(client.ws_close())
+
+    assert mock_ws.close.called
+    assert len(mock_ws.close.mock_calls) == 1
+    assert mock_ws.send_str.called
+    assert len(mock_ws.send_str.mock_calls) == 2
+    assert mock_ws.send_str.mock_calls[0][1][0] == '41'
+    assert mock_ws.send_str.mock_calls[1][1][0] == '1'
+    assert interval_mock.cancel.called
+    assert len(interval_mock.cancel.mock_calls) == 1
+    assert timeout_mock.cancel.called
+    assert len(timeout_mock.cancel.mock_calls) == 1
+
+
 def test_ws_close_noop(client):
     """Test websocket close when already closed."""
     client.loop.run_until_complete(client.ws_close())
@@ -648,6 +674,7 @@ def test_ws_close_exception(client):
     mock_ws.send_str.side_effect = side_effect
 
     client._ws_connection = mock_ws
+    client._ws_session_data = {}
     client._handle_event = MagicMock()
 
     client.loop.run_until_complete(client.ws_close())
