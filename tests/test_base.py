@@ -208,6 +208,7 @@ def test_base_data_object():
     })
 
     assert obj.attr1 == "value1"
+    assert obj.data == {"attr1": "value1"}
     with pytest.raises(AttributeError):
         obj.attr2
     with pytest.raises(AttributeError):

@@ -153,6 +153,11 @@ class BaseDataObject():
         return '<{}.{} id="{}">'.format(
             self.__module__, self.__class__.__name__, self.id)
 
+    @property
+    def data(self):
+        """Return the data for this object as a dictionary."""
+        return self._data
+
 
 class BaseApiDataObject(BaseApiObject, BaseDataObject):
     """Data object with methods to fetch further data."""
