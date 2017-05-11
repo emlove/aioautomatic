@@ -140,6 +140,14 @@ Create a session using an oauth handshake authorization code.
             print(user.first_name)
             print(user.last_name)
 
+            # Save the refresh token from the session for use next time
+            # a session needs to be created.
+            refresh_token = session.refresh_token
+
+            # Create a new session with the refresh token.
+            session = yield from client.create_session_from_refresh_token(
+                refresh_token)
+
         finally:
             yield from aiohttp_session.close()
 

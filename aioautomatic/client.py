@@ -51,7 +51,7 @@ class Client(base.BaseApiObject):
 
     @asyncio.coroutine
     def create_session_from_oauth_code(self, code):
-        """Create a session object authenticated by username and password.
+        """Create a session object authenticated by an oauth code.
 
         :param code: Auth code received from Automatic redirect URL GET
         :returns Session: Authenticated session object
@@ -62,6 +62,25 @@ class Client(base.BaseApiObject):
             'client_secret': self._client_secret,
             'grant_type': 'authorization_code',
             'code': code,
+            }
+        resp = yield from self._post(const.AUTH_URL, auth_payload)
+        data = validation.AUTH_TOKEN(resp)
+        return session.Session(self, **data)
+
+    # pylint: disable=invalid-name
+    @asyncio.coroutine
+    def create_session_from_refresh_token(self, refresh_token):
+        """Create a session object authenticated by a stored refresh token.
+
+        :param refresh_token: Refresh token from previous session
+        :returns Session: Authenticated session object
+        """
+        _LOGGER.info("Creating session from refresh token.")
+        auth_payload = {
+            'client_id': self._client_id,
+            'client_secret': self._client_secret,
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
             }
         resp = yield from self._post(const.AUTH_URL, auth_payload)
         data = validation.AUTH_TOKEN(resp)
