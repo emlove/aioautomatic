@@ -36,7 +36,7 @@ def test_create_session_from_oauth_code(client):
     }
     client._client_session.request.return_value = resp
 
-    client.loop.run_until_complete(
+    session = client.loop.run_until_complete(
         client.create_session_from_oauth_code("mock_code"))
     assert client._client_session.request.called
     assert len(client._client_session.request.mock_calls) == 2
@@ -49,6 +49,7 @@ def test_create_session_from_oauth_code(client):
         "grant_type": "authorization_code",
         "code": "mock_code",
     }
+    assert session.refresh_token == "mock_refresh"
 
 
 def test_create_session_from_password(client):
@@ -65,7 +66,7 @@ def test_create_session_from_password(client):
     }
     client._client_session.request.return_value = resp
 
-    client.loop.run_until_complete(
+    session = client.loop.run_until_complete(
         client.create_session_from_password(
             ['location', 'trip'], "mock_user", "mock_pass"))
     assert client._client_session.request.called
@@ -81,6 +82,7 @@ def test_create_session_from_password(client):
         "password": "mock_pass",
         "scope": ("scope:location scope:trip"),
     }
+    assert session.refresh_token == "mock_refresh"
 
 
 def test_scope_forbidden(client):

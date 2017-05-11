@@ -154,3 +154,8 @@ class Session(base.BaseApiObject):
         _LOGGER.info("Fetching devices.")
         resp = yield from self._get(const.USER_URL.format(user_id))
         return data.User(self, resp)
+
+    @property
+    def refresh_token(self):
+        """The refresh token used to authorize a new session."""
+        return self._refresh_token
