@@ -50,12 +50,30 @@ class Client(base.BaseApiObject):
         self._ws_callbacks = {k: [] for k in VALID_CALLBACKS}
 
     @asyncio.coroutine
+    def create_session_from_oauth_code(self, code):
+        """Create a session object authenticated by username and password.
+
+        :param code: Auth code received from Automatic redirect URL GET
+        :returns Session: Authenticated session object
+        """
+        _LOGGER.info("Creating session from oauth code.")
+        auth_payload = {
+            'client_id': self._client_id,
+            'client_secret': self._client_secret,
+            'grant_type': 'authorization_code',
+            'code': code,
+            }
+        resp = yield from self._post(const.AUTH_URL, auth_payload)
+        data = validation.AUTH_TOKEN(resp)
+        return session.Session(self, **data)
+
+    @asyncio.coroutine
     def create_session_from_password(self, scope, username, password):
         """Create a session object authenticated by username and password.
 
         :param scope: Requested API scope for this session
         :param username: User's Automatic account username
-        :param username: User's Automatic account password
+        :param password: User's Automatic account password
         :returns Session: Authenticated session object
         """
         _LOGGER.info("Creating session from username/password.")

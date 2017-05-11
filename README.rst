@@ -102,6 +102,49 @@ Query for information from the users account.
 
     asyncio.get_event_loop().run_until_complete(loop())
 
+Create a session using an oauth handshake authorization code.
+
+.. code-block:: python
+
+    import asyncio
+    import aioautomatic
+    import aiohttp
+
+    CLIENT_ID = '<client_id>'
+    SECRET_ID = '<secret>'
+    # The user is redirected to Automatic's website, and after they authorize
+    # the app, they are redirected back to the Redirect URL, with the required
+    # code in the query parameters.
+    # See: https://developer.automatic.com/api-reference/#oauth-workflow
+    AUTH_CODE = '<code>'
+
+
+    @asyncio.coroutine
+    def loop():
+        aiohttp_session = aiohttp.ClientSession()
+        try:
+            client = aioautomatic.Client(
+                CLIENT_ID,
+                SECRET_ID,
+                aiohttp_session)
+            session = yield from client.create_session_from_oauth_code(
+                AUTH_CODE)
+
+            # Fetch information about the authorized user
+            user = yield from session.get_user()
+            user_profile = yield from user.get_profile()
+            user_metadata = yield from user.get_metadata()
+            print("***USER***")
+            print(user)
+            print(user.email)
+            print(user.first_name)
+            print(user.last_name)
+
+        finally:
+            yield from aiohttp_session.close()
+
+    asyncio.get_event_loop().run_until_complete(loop())
+
 Open a websocket connection for realtime updates
 
 .. code-block:: python
