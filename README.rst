@@ -35,12 +35,13 @@ Query for information from the users account.
     from datetime import datetime
     from datetime import timedelta
 
-    SCOPE = ['location', 'vehicle:profile', 'user:profile', 'trip']
-
     CLIENT_ID = '<client_id>'
     SECRET_ID = '<secret>'
-    USER_EMAIL = '<user_email>'
-    USER_PASSWORD = '<user_password>'
+    # The user is redirected to Automatic's website, and after they authorize
+    # the app, they are redirected back to the Redirect URL, with the required
+    # code in the query parameters.
+    # See: https://developer.automatic.com/api-reference/#oauth-workflow
+    AUTH_CODE = '<code>'
 
 
     @asyncio.coroutine
@@ -51,8 +52,8 @@ Query for information from the users account.
                 CLIENT_ID,
                 SECRET_ID,
                 aiohttp_session)
-            session = yield from client.create_session_from_password(
-                    SCOPE, USER_EMAIL, USER_PASSWORD)
+            session = yield from client.create_session_from_oauth_code(
+                AUTH_CODE)
 
             # Fetch information about the authorized user
             user = yield from session.get_user()
@@ -97,12 +98,20 @@ Query for information from the users account.
                 trips = yield from trips.get_next()
                 print(trips)
 
+            # Save the refresh token from the session for use next time
+            # a session needs to be created.
+            refresh_token = session.refresh_token
+
+            # Create a new session with the refresh token.
+            session = yield from client.create_session_from_refresh_token(
+                refresh_token)
+
         finally:
             yield from aiohttp_session.close()
 
     asyncio.get_event_loop().run_until_complete(loop())
 
-Create a session using an oauth handshake authorization code.
+Create a session using user credentials. (Not recommended)
 
 .. code-block:: python
 
@@ -110,13 +119,12 @@ Create a session using an oauth handshake authorization code.
     import aioautomatic
     import aiohttp
 
+    SCOPE = ['location', 'vehicle:profile', 'user:profile', 'trip']
+
     CLIENT_ID = '<client_id>'
     SECRET_ID = '<secret>'
-    # The user is redirected to Automatic's website, and after they authorize
-    # the app, they are redirected back to the Redirect URL, with the required
-    # code in the query parameters.
-    # See: https://developer.automatic.com/api-reference/#oauth-workflow
-    AUTH_CODE = '<code>'
+    USER_EMAIL = '<user_email>'
+    USER_PASSWORD = '<user_password>'
 
 
     @asyncio.coroutine
@@ -127,8 +135,8 @@ Create a session using an oauth handshake authorization code.
                 CLIENT_ID,
                 SECRET_ID,
                 aiohttp_session)
-            session = yield from client.create_session_from_oauth_code(
-                AUTH_CODE)
+            session = yield from client.create_session_from_password(
+                    SCOPE, USER_EMAIL, USER_PASSWORD)
 
             # Fetch information about the authorized user
             user = yield from session.get_user()
@@ -139,14 +147,6 @@ Create a session using an oauth handshake authorization code.
             print(user.email)
             print(user.first_name)
             print(user.last_name)
-
-            # Save the refresh token from the session for use next time
-            # a session needs to be created.
-            refresh_token = session.refresh_token
-
-            # Create a new session with the refresh token.
-            session = yield from client.create_session_from_refresh_token(
-                refresh_token)
 
         finally:
             yield from aiohttp_session.close()
