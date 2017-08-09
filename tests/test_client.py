@@ -63,9 +63,10 @@ def test_create_session_from_oauth_code(client):
         "token_type": "Bearer",
     }
     client._client_session.request.return_value = resp
+    client.state = "mock_state"
 
     session = client.loop.run_until_complete(
-        client.create_session_from_oauth_code("mock_code"))
+        client.create_session_from_oauth_code("mock_code", "mock_state"))
     assert client._client_session.request.called
     assert len(client._client_session.request.mock_calls) == 2
     assert client._client_session.request.mock_calls[0][1][0] == "POST"
@@ -78,6 +79,14 @@ def test_create_session_from_oauth_code(client):
         "code": "mock_code",
     }
     assert session.refresh_token == "mock_refresh"
+
+
+def test_create_session_from_oauth_code_bad_state(client):
+    """Test that a state mismatch throws an exception."""
+    client.state = "mock_state"
+    with pytest.raises(exceptions.StateError):
+        client.loop.run_until_complete(
+            client.create_session_from_oauth_code("mock_code", "bad_state"))
 
 
 def test_create_session_from_refresh_token(client):

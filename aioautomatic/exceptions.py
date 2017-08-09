@@ -9,6 +9,10 @@ class ProtocolError(AutomaticError):
     """An error raised by Automatic caused by a protocol problem."""
 
 
+class StateError(ProtocolError):
+    """The state returned by an OAuth2 request didn't match the sent state."""
+
+
 class TransportError(AutomaticError):
     """An error caused by an underlying transport problem."""
 

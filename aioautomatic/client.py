@@ -65,12 +65,21 @@ class Client(base.BaseApiObject):
             string.ascii_letters + string.digits) for _ in range(32))
 
     @asyncio.coroutine
-    def create_session_from_oauth_code(self, code):
+    def create_session_from_oauth_code(self, code, state):
         """Create a session object authenticated by an oauth code.
 
         :param code: Auth code received from Automatic redirect URL GET
+        :param state: State received from Automatic redirect URL GET
         :returns Session: Authenticated session object
         """
+        if state != self.state:
+            raise exceptions.StateError(
+                "Error creating session. State {} returned by OAauth2 request "
+                "doesn't match aioautomatic state {}. A possible forgery "
+                "attack is taking place. See "
+                "https://developer.automatic.com/api-reference/#oauth-workflow"
+                .format(state, self.state))
+
         _LOGGER.info("Creating session from oauth code.")
         auth_payload = {
             'client_id': self._client_id,
