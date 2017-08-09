@@ -22,6 +22,34 @@ def test_create_client(aiohttp_session):
     assert client.client_secret == client_secret
 
 
+@patch('random.SystemRandom.choice')
+def test_generate_state(choice, aiohttp_session):
+    """Regenerate the client state."""
+    choices = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    choice.return_value = '0'
+
+    client_id = 'mock_id'
+    client_secret = 'mock_secret'
+    client = Client(client_id, client_secret, aiohttp_session)
+
+    assert client.state == '0' * 32
+    assert choice.called
+    assert len(choice.mock_calls) == 32
+    for call in choice.mock_calls:
+        assert call[1][0] == choices
+
+    choice.reset_mock()
+    choice.return_value = 'A'
+
+    client.generate_state()
+
+    assert client.state == 'A' * 32
+    assert choice.called
+    assert len(choice.mock_calls) == 32
+    for call in choice.mock_calls:
+        assert call[1][0] == choices
+
+
 def test_create_session_from_oauth_code(client):
     """Test opening a session from an oauth code."""
     resp = AsyncMock()

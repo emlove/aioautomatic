@@ -4,6 +4,8 @@ import asyncio
 import itertools
 import json
 import logging
+import random
+import string
 import time
 
 import aiohttp
@@ -48,6 +50,19 @@ class Client(base.BaseApiObject):
         self._ws_connection = None
         self._ws_session_data = None
         self._ws_callbacks = {k: [] for k in VALID_CALLBACKS}
+
+        self.generate_state()
+
+    def generate_state(self):
+        """Generate a new state string for OAuth2 url requests.
+
+        This state is included in the OAuth2 request to automatic, and should
+        be returned with the Automatic response. This method is called
+        automatically when the client is instantiated, and only needs to be
+        called again if the old state should be invalidated.
+        """
+        self.state = ''.join(random.SystemRandom().choice(
+            string.ascii_letters + string.digits) for _ in range(32))
 
     @asyncio.coroutine
     def create_session_from_oauth_code(self, code):
