@@ -37,11 +37,7 @@ Query for information from the users account.
 
     CLIENT_ID = '<client_id>'
     SECRET_ID = '<secret>'
-    # The user is redirected to Automatic's website, and after they authorize
-    # the app, they are redirected back to the Redirect URL, with the required
-    # code in the query parameters.
-    # See: https://developer.automatic.com/api-reference/#oauth-workflow
-    AUTH_CODE = '<code>'
+    SCOPE = ['current_location', 'location', 'vehicle:profile', 'user:profile', 'trip']
 
 
     @asyncio.coroutine
@@ -52,8 +48,18 @@ Query for information from the users account.
                 CLIENT_ID,
                 SECRET_ID,
                 aiohttp_session)
+            url = client.generate_oauth_url(SCOPE)
+
+            # Redirect the user to this URL. After the user authorizes access
+            # to their account, Automatic will redirect them to your
+            # application's OAuth Redirect URL, configured in the Automatic
+            # Developer Apps Manager. Capture the code and state returned
+            # with that request.
+            code = '<code>'
+            state = '<state>'
+
             session = yield from client.create_session_from_oauth_code(
-                AUTH_CODE)
+                code, state)
 
             # Fetch information about the authorized user
             user = yield from session.get_user()
@@ -203,6 +209,13 @@ Open a websocket connection for realtime updates
             yield from aiohttp_session.close()
 
     asyncio.get_event_loop().run_until_complete(loop())
+
+Changelog
+---------
+0.5.0 (Future)
+~~~~~~~~~~~~~~
+ - Added `Client.generate_oauth_url` to simplify implementation of OAuth2 authentication.
+ - State is now required for `Client.create_session_from_oauth_code`.
 
 Credits
 ---------

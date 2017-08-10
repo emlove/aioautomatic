@@ -2,6 +2,7 @@
 import asyncio
 import json
 import queue
+import urllib
 
 from aioautomatic.client import Client
 from aioautomatic import data
@@ -87,6 +88,24 @@ def test_create_session_from_oauth_code_bad_state(client):
     with pytest.raises(exceptions.StateError):
         client.loop.run_until_complete(
             client.create_session_from_oauth_code("mock_code", "bad_state"))
+
+
+def test_generate_oauth_url(client):
+    """Test generating an oauth url for the client."""
+    client.state = "mock_state"
+    scope = ['scope1', 'scope2']
+
+    parsed = urllib.parse.urlparse(client.generate_oauth_url(scope))
+    params = urllib.parse.parse_qs(parsed.query)
+    assert parsed.scheme == "https"
+    assert parsed.netloc == "accounts.automatic.com"
+    assert parsed.path == "/oauth/authorize"
+    assert parsed.params == ""
+    assert parsed.fragment == ""
+    assert params["client_id"][0] == "mock_id"
+    assert params["scope"][0] == "scope:scope1 scope:scope2"
+    assert params["response_type"][0] == "code"
+    assert params["state"][0] == "mock_state"
 
 
 def test_create_session_from_refresh_token(client):

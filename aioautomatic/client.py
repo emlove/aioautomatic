@@ -7,6 +7,7 @@ import logging
 import random
 import string
 import time
+from urllib.parse import urlencode
 
 import aiohttp
 from aiohttp import ClientError
@@ -63,6 +64,24 @@ class Client(base.BaseApiObject):
         """
         self.state = ''.join(random.SystemRandom().choice(
             string.ascii_letters + string.digits) for _ in range(32))
+
+    def generate_oauth_url(self, scope):
+        """Create an OAuth2 authentication url for the provided scope.
+
+        This method creates an authentication url to be used for OAuth2. The
+        user should be directed to this URL. When authentication is complete,
+        they will be redirected to your application's OAuth Redirect URL,
+        configured in the Automatic Developer Apps Manager.
+
+        :param scope: Requested API scope for this session
+        """
+        params = {
+            'client_id': self._client_id,
+            'scope': ' '.join('scope:{}'.format(item) for item in scope),
+            'response_type': 'code',
+            'state': self.state,
+        }
+        return const.OAUTH_URL.format(urlencode(params))
 
     @asyncio.coroutine
     def create_session_from_oauth_code(self, code, state):

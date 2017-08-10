@@ -7,6 +7,7 @@ AUTH_URL = 'https://accounts.automatic.com/oauth/access_token'
 BASE_API_URL = 'https://api.automatic.com'
 DEVICES_URL = '{}/device'.format(BASE_API_URL)
 DEVICE_URL = '{}/device/{{}}'.format(BASE_API_URL)
+OAUTH_URL = 'https://accounts.automatic.com/oauth/authorize?{}'
 TRIP_URL = '{}/trip/{{}}'.format(BASE_API_URL)
 TRIPS_URL = '{}/trip'.format(BASE_API_URL)
 USER_URL = '{}/user/{{}}'.format(BASE_API_URL)
