@@ -54,7 +54,9 @@ class BaseApiObject():
         """Wrapper for aiohttp request that returns a parsed dict."""
         resp = yield from self._raw_request(method, url, data)
         try:
-            return (yield from resp.json())
+            data = yield from resp.json()
+            _LOGGER.debug('Received %r', data)
+            return data
         except (aiohttp.client_exceptions.ClientResponseError,
                 ValueError) as exc:
             raise exceptions.InvalidResponseError from exc
