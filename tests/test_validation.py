@@ -5,6 +5,18 @@ from aioautomatic import validation
 import pytest
 
 
+def test_valid_string_case_insensitive():
+    """Test that strings are matched insesnsitive."""
+    assert validation.string_case_insensitive("mock")("Mock") == "mock"
+    assert validation.string_case_insensitive("mock")("Mock") == "mock"
+
+
+def test_invalid_string_case_insensitive():
+    """Test that nonmatching strings fail validation."""
+    with pytest.raises(validation.vol.Invalid):
+        assert validation.string_case_insensitive("Mock")("mock2")
+
+
 def test_valid_timestamp():
     """Test that a valid datetime returns the timestamp."""
     dt = datetime(2017, 2, 21, 4, 35, 21, 123000, tzinfo=timezone.utc)

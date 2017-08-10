@@ -61,7 +61,7 @@ def test_create_session_from_oauth_code(client):
         "scope": ("scope:location scope:vehicle:profile "
                   "scope:user:profile scope:trip"),
         "refresh_token": "mock_refresh",
-        "token_type": "Bearer",
+        "token_type": "bearer",
     }
     client._client_session.request.return_value = resp
     client.state = "mock_state"

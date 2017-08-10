@@ -38,6 +38,18 @@ def coerce_datetime(value):
                     value, DATETIME_FORMAT))
 
 
+def string_case_insensitive(target):
+    """Validator for a case insensitive string."""
+    def validator(value):
+        """Actual validation function."""
+        if value.lower() != target.lower():
+            raise vol.Invalid(
+                "%s does not match expected value of %s",
+                value.lower(), target.lower())
+        return value.lower()
+    return validator
+
+
 OPT_BOOL = vol.Any(bool, None)
 OPT_DATETIME = vol.Any(coerce_datetime, None)
 OPT_FLOAT = vol.Any(vol.Coerce(float), None)
@@ -85,7 +97,7 @@ AUTH_TOKEN = _RESPONSE_BASE.extend({
     "expires_in": int,
     "scope": str,
     "refresh_token": str,
-    "token_type": vol.In(["Bearer"]),
+    "token_type": string_case_insensitive("Bearer"),
 })
 
 LIST_METADATA = _RESPONSE_BASE.extend({
