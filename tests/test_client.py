@@ -138,41 +138,8 @@ def test_create_session_from_refresh_token(client):
     assert session.refresh_token == "mock_refresh"
 
 
-def test_create_session_from_password(client):
-    """Test opening a session from the users password."""
-    resp = AsyncMock()
-    resp.status = 200
-    resp.json.return_value = {
-        "access_token": "mock_access",
-        "expires_in": 123456,
-        "scope": ("scope:location scope:vehicle:profile "
-                  "scope:user:profile scope:trip"),
-        "refresh_token": "mock_refresh",
-        "token_type": "Bearer",
-    }
-    client._client_session.request.return_value = resp
-
-    session = client.loop.run_until_complete(
-        client.create_session_from_password(
-            ['location', 'trip'], "mock_user", "mock_pass"))
-    assert client._client_session.request.called
-    assert len(client._client_session.request.mock_calls) == 2
-    assert client._client_session.request.mock_calls[0][1][0] == "POST"
-    assert client._client_session.request.mock_calls[0][1][1] == \
-        "https://accounts.automatic.com/oauth/access_token"
-    assert client._client_session.request.mock_calls[0][2]['data'] == {
-        "client_id": client.client_id,
-        "client_secret": client.client_secret,
-        "grant_type": "password",
-        "username": "mock_user",
-        "password": "mock_pass",
-        "scope": ("scope:location scope:trip"),
-    }
-    assert session.refresh_token == "mock_refresh"
-
-
 def test_scope_forbidden(client):
-    """Test opening a session from the users password."""
+    """Test opening a session from an invalid token."""
     resp = AsyncMock()
     resp.status = 403
     resp.json.return_value = {
@@ -181,8 +148,8 @@ def test_scope_forbidden(client):
     client._client_session.request.return_value = resp
 
     with pytest.raises(exceptions.ForbiddenError):
-        client.loop.run_until_complete(client.create_session_from_password(
-            ['location', 'trip'], "mock_user", "mock_pass"))
+        client.loop.run_until_complete(
+            client.create_session_from_refresh_token("bad_token"))
 
 
 @patch('time.time', return_value=1493426946.123)

@@ -117,48 +117,6 @@ Query for information from the users account.
 
     asyncio.get_event_loop().run_until_complete(loop())
 
-Create a session using user credentials. (Not recommended)
-
-.. code-block:: python
-
-    import asyncio
-    import aioautomatic
-    import aiohttp
-
-    SCOPE = ['location', 'vehicle:profile', 'user:profile', 'trip']
-
-    CLIENT_ID = '<client_id>'
-    SECRET_ID = '<secret>'
-    USER_EMAIL = '<user_email>'
-    USER_PASSWORD = '<user_password>'
-
-
-    @asyncio.coroutine
-    def loop():
-        aiohttp_session = aiohttp.ClientSession()
-        try:
-            client = aioautomatic.Client(
-                CLIENT_ID,
-                SECRET_ID,
-                aiohttp_session)
-            session = yield from client.create_session_from_password(
-                    SCOPE, USER_EMAIL, USER_PASSWORD)
-
-            # Fetch information about the authorized user
-            user = yield from session.get_user()
-            user_profile = yield from user.get_profile()
-            user_metadata = yield from user.get_metadata()
-            print("***USER***")
-            print(user)
-            print(user.email)
-            print(user.first_name)
-            print(user.last_name)
-
-        finally:
-            yield from aiohttp_session.close()
-
-    asyncio.get_event_loop().run_until_complete(loop())
-
 Open a websocket connection for realtime updates
 
 .. code-block:: python
@@ -212,7 +170,11 @@ Open a websocket connection for realtime updates
 
 Changelog
 ---------
-0.5.0 (Future)
+0.6.0 (August 15, 2017)
+~~~~~~~~~~~~~~
+ - Removed `Client.create_session_from_password`, which is no longer supported by Automatic.
+
+0.5.0 (August 12, 2017)
 ~~~~~~~~~~~~~~
  - Added `Client.generate_oauth_url` to simplify implementation of OAuth2 authentication.
  - State is now required for `Client.create_session_from_oauth_code`.

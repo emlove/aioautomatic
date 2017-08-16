@@ -130,28 +130,6 @@ class Client(base.BaseApiObject):
         return session.Session(self, **data)
 
     @asyncio.coroutine
-    def create_session_from_password(self, scope, username, password):
-        """Create a session object authenticated by username and password.
-
-        :param scope: Requested API scope for this session
-        :param username: User's Automatic account username
-        :param password: User's Automatic account password
-        :returns Session: Authenticated session object
-        """
-        _LOGGER.info("Creating session from username/password.")
-        auth_payload = {
-            'client_id': self._client_id,
-            'client_secret': self._client_secret,
-            'grant_type': 'password',
-            'username': username,
-            'password': password,
-            'scope': ' '.join('scope:{}'.format(item) for item in scope),
-            }
-        resp = yield from self._post(const.AUTH_URL, auth_payload)
-        data = validation.AUTH_TOKEN(resp)
-        return session.Session(self, **data)
-
-    @asyncio.coroutine
     def _get_engineio_session(self):
         """Connect to server and get an engineIO session."""
         # Automatic's websocket API is built on top of the engineIO API.
