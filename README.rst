@@ -170,14 +170,22 @@ Open a websocket connection for realtime updates
 
 Changelog
 ---------
+0.6.2 (August 26, 2017)
+~~~~~~~~~~~~~~
+- Invalid messages received during the websocket loop will only emit a log error instead of bubbling out of the loop.
+
+0.6.1 (August 26, 2017)
+~~~~~~~~~~~~~~
+- Voluptuous errors will no longer bubble out of aioautomatic. Instead InvalidMessageError will be raised.
+
 0.6.0 (August 15, 2017)
 ~~~~~~~~~~~~~~
- - Removed `Client.create_session_from_password`, which is no longer supported by Automatic.
+- Removed `Client.create_session_from_password`, which is no longer supported by Automatic.
 
 0.5.0 (August 12, 2017)
 ~~~~~~~~~~~~~~
- - Added `Client.generate_oauth_url` to simplify implementation of OAuth2 authentication.
- - State is now required for `Client.create_session_from_oauth_code`.
+- Added `Client.generate_oauth_url` to simplify implementation of OAuth2 authentication.
+- State is now required for `Client.create_session_from_oauth_code`.
 
 Credits
 ---------
