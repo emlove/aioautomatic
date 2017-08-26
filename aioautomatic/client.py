@@ -107,7 +107,7 @@ class Client(base.BaseApiObject):
             'code': code,
             }
         resp = yield from self._post(const.AUTH_URL, auth_payload)
-        data = validation.AUTH_TOKEN(resp)
+        data = validation.validate(validation.AUTH_TOKEN, resp)
         return session.Session(self, **data)
 
     # pylint: disable=invalid-name
@@ -126,7 +126,7 @@ class Client(base.BaseApiObject):
             'refresh_token': refresh_token,
             }
         resp = yield from self._post(const.AUTH_URL, auth_payload)
-        data = validation.AUTH_TOKEN(resp)
+        data = validation.validate(validation.AUTH_TOKEN, resp)
         return session.Session(self, **data)
 
     @asyncio.coroutine

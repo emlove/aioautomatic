@@ -3,6 +3,20 @@ from datetime import datetime
 
 import voluptuous as vol
 
+from aioautomatic import exceptions
+
+
+def validate(schema, value):
+    """Validate the value using the given schema.
+
+    If the value is not valid, an InvalidMessageError exception is raised.
+    """
+    try:
+        return schema(value)
+    except vol.error.Invalid as exc:
+        raise exceptions.InvalidMessageError(
+            "Message does not match schema: {}".format(value)) from exc
+
 
 def timestamp(value):
     """Check that input is a datetime and return the timestamp."""

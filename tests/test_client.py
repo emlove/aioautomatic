@@ -575,6 +575,30 @@ def test_ws_handle_invalid_event(mock_logger, client):
     assert mock_logger.debug.mock_calls[0][1][0] == "event_msg"
 
 
+def test_ws_handle_invalid_message(client):
+    """Test websocket valid event."""
+    client._handle_event = MagicMock()
+    with pytest.raises(exceptions.InvalidMessageError):
+        client._handle_packet('42{}'.format(json.dumps([
+            "location:updated",
+            {
+                "id": None,
+                "user": {
+                    "id": "mock_user_id",
+                    "url": "mock_user_url",
+                },
+                "type": "location:updated",
+                "vehicle": {
+                    "id": "mock_vehicle_id",
+                    "url": "mock_vehicle_url",
+                },
+                "device": {
+                    "id": "mock_device_id",
+                },
+            },
+        ])))
+
+
 def test_ws_handle_valid_event(client):
     """Test websocket valid event."""
     client._handle_event = MagicMock()

@@ -21,6 +21,10 @@ class InvalidResponseError(ProtocolError):
     """The response returned from Automatic is not valid json."""
 
 
+class InvalidMessageError(ProtocolError):
+    """The response returned from Automatic does not match the schema."""
+
+
 class SocketIOError(ProtocolError):
     """SocketIO error message received."""
 

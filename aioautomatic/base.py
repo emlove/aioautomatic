@@ -98,7 +98,7 @@ class ResultList(BaseApiObject, list):
         """Create a result list object."""
         BaseApiObject.__init__(self, parent)
         self._item_class = item_class
-        resp = validation.LIST_RESPONSE(resp)
+        resp = validation.validate(validation.LIST_RESPONSE, resp)
         list.__init__(self, (item_class(item) for item in resp['results']))
         self._next = resp['_metadata']['next']
         self._previous = resp['_metadata']['previous']
@@ -138,7 +138,7 @@ class BaseDataObject():
 
     def __init__(self, data):
         """Create the data object."""
-        self._data = self.validator(data)
+        self._data = validation.validate(self.validator, data)
 
     def __getattr__(self, name):
         """Lookup the attribute in the data dict."""
