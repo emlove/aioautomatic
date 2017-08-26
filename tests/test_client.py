@@ -575,28 +575,41 @@ def test_ws_handle_invalid_event(mock_logger, client):
     assert mock_logger.debug.mock_calls[0][1][0] == "event_msg"
 
 
-def test_ws_handle_invalid_message(client):
+@patch('aioautomatic.client._LOGGER')
+def test_ws_handle_invalid_message(mock_logger, client):
     """Test websocket valid event."""
     client._handle_event = MagicMock()
-    with pytest.raises(exceptions.InvalidMessageError):
-        client._handle_packet('42{}'.format(json.dumps([
-            "location:updated",
-            {
-                "id": None,
-                "user": {
-                    "id": "mock_user_id",
-                    "url": "mock_user_url",
-                },
-                "type": "location:updated",
-                "vehicle": {
-                    "id": "mock_vehicle_id",
-                    "url": "mock_vehicle_url",
-                },
-                "device": {
-                    "id": "mock_device_id",
-                },
+    client._handle_packet('42{}'.format(json.dumps([
+        "location:updated",
+        {
+            "id": None,
+            "user": {
+                "id": "mock_user_id",
+                "url": "mock_user_url",
             },
-        ])))
+            "type": "location:updated",
+            "vehicle": {
+                "id": "mock_vehicle_id",
+                "url": "mock_vehicle_url",
+            },
+            "device": {
+                "id": "mock_device_id",
+            },
+        },
+    ])))
+
+    assert not client._handle_event.called
+
+    assert mock_logger.error.called
+    assert len(mock_logger.error.mock_calls) == 1
+    assert mock_logger.error.mock_calls[0][1][0] == \
+        "Message %s received does not match schema"
+    assert mock_logger.error.mock_calls[0][1][1] == "location:updated"
+
+    assert mock_logger.debug.called
+    assert len(mock_logger.debug.mock_calls) == 1
+    assert isinstance(mock_logger.debug.mock_calls[0][2]['exc_info'],
+                      exceptions.InvalidMessageError)
 
 
 def test_ws_handle_valid_event(client):

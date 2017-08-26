@@ -259,7 +259,15 @@ class Client(base.BaseApiObject):
                 _LOGGER.debug(event)
                 return
 
-            self._handle_event(name, event_class(self, event))
+            try:
+                event_data = event_class(self, event)
+            except exceptions.InvalidMessageError as exc:
+                _LOGGER.error('Message %s received does not match schema',
+                              name)
+                _LOGGER.debug(event, exc_info=exc)
+                return
+
+            self._handle_event(name, event_data)
             return
 
         # socketIO error
