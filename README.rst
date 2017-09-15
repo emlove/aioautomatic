@@ -170,6 +170,10 @@ Open a websocket connection for realtime updates
 
 Changelog
 ---------
+0.6.3 (September 14, 2017)
+~~~~~~~~~~~~~~
+- Trip responses that don't include start or end addresses are now accepted.
+
 0.6.2 (August 26, 2017)
 ~~~~~~~~~~~~~~
 - Invalid messages received during the websocket loop will only emit a log error instead of bubbling out of the loop.

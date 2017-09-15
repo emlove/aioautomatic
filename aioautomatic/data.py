@@ -49,9 +49,11 @@ class Trip(base.BaseDataObject):
         """Create the data object."""
         super().__init__(data)
         self.start_location = Location(self._data.get('start_location'))
-        self.start_address = Address(self._data.get('start_address'))
         self.end_location = Location(self._data.get('end_location'))
-        self.end_address = Address(self._data.get('end_address'))
+        if self._data.get('start_address') is not None:
+            self.start_address = Address(self._data.get('start_address'))
+        if self._data.get('end_address') is not None:
+            self.end_address = Address(self._data.get('end_address'))
         self.vehicle_events = [
             VehicleEvent(ev) for ev in self._data.get('vehicle_events')]
         self.tags = self._data.get('tags') or []

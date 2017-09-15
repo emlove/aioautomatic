@@ -301,12 +301,8 @@ def test_get_trip(session):
             "lon": 44.54321,
             "accuracy_m": 11.2,
             },
-        "start_address": {
-            "name": "123 Fake St",
-            },
-        "end_address": {
-            "name": "456 Elm",
-            },
+        "start_address": None,
+        "end_address": None,
     }
     session._client_session.request.return_value = resp
 
@@ -320,6 +316,8 @@ def test_get_trip(session):
     assert trip.id == "mock_id"
     assert trip.start_location.lat == 43.12345
     assert trip.start_location.lon == 34.54321
+    assert trip.start_address is None
+    assert trip.end_address is None
 
 
 def test_get_vehicle(session):
