@@ -116,6 +116,11 @@ def test_realtime_get_vehicle(client):
         'id': 'mock_vehicle_id',
         'url': 'mock_vehicle_url',
         'display_name': 'mock_display_name',
+        'latest_location': {
+            'lat': 12.1,
+            'lon': 13.2,
+            'accuracy_m': 2.4,
+        },
     }
     event._get.return_value = resp
 
@@ -128,6 +133,9 @@ def test_realtime_get_vehicle(client):
     assert vehicle.id == 'mock_vehicle_id'
     assert vehicle.url == 'mock_vehicle_url'
     assert vehicle.display_name == 'mock_display_name'
+    assert vehicle.latest_location.lat == 12.1
+    assert vehicle.latest_location.lon == 13.2
+    assert vehicle.latest_location.accuracy_m == 2.4
 
 
 def test_realtime_get_device(client):

@@ -38,6 +38,9 @@ class Vehicle(base.BaseDataObject):
         super().__init__(data)
         self.active_dtcs = [
             VehicleDTCS(v) for v in self._data.get('active_dtcs') or []]
+        if self._data.get('latest_location') is not None:
+            self.latest_location = RealtimeLocation(
+                self._data.get('latest_location'))
 
 
 class Trip(base.BaseDataObject):
