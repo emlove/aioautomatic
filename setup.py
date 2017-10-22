@@ -10,7 +10,7 @@ requirements = [
 
 setup(
     name='aioautomatic',
-    version='0.6.3',
+    version='0.6.4',
     description="Asyncio library for the Automatic API",
     long_description=readme,
     author="Adam Mills",

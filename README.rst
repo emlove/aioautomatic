@@ -170,6 +170,10 @@ Open a websocket connection for realtime updates
 
 Changelog
 ---------
+0.6.4 (October 22, 2017)
+~~~~~~~~~~~~~~
+- Vehicle requets now correctly return a location object for latest_location.
+
 0.6.3 (September 14, 2017)
 ~~~~~~~~~~~~~~
 - Trip responses that don't include start or end addresses are now accepted.
