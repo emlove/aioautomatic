@@ -57,9 +57,8 @@ def string_case_insensitive(target):
     def validator(value):
         """Actual validation function."""
         if value.lower() != target.lower():
-            raise vol.Invalid(
-                "%s does not match expected value of %s",
-                value.lower(), target.lower())
+            raise vol.Invalid("{} does not match expected value of {}".format(
+                value.lower(), target.lower()))
         return value.lower()
     return validator
 
