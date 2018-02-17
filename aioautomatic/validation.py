@@ -172,7 +172,7 @@ VEHICLE_EVENT = _RESPONSE_BASE.extend({
     "type": str,
     opt("lat"): OPT_FLOAT,
     opt("lon"): OPT_FLOAT,
-    opt("created_at"): coerce_datetime,
+    opt("created_at"): OPT_DATETIME,
     opt("g_force"): OPT_FLOAT,
 })
 
