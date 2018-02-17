@@ -215,6 +215,24 @@ def test_get_engineio_session_error(mock_time, client):
         "engineIO packet is not open type: Error Requesting Session"
 
 
+@patch('time.time', return_value=1493426946.123)
+def test_get_engineio_session_empty_packet(mock_time, client):
+    """Test error requesting an engineIO session from Automatic."""
+    resp = AsyncMock()
+    resp.status = 200
+
+    # Simulate an empty packet return
+    resp.read.return_value = b''
+    client._client_session.request.return_value = resp
+
+    with pytest.raises(exceptions.TransportError) as exc:
+        client.loop.run_until_complete(
+            client._get_engineio_session())
+
+    assert str(exc.value) == \
+        "engineIO session packet not received"
+
+
 def test_get_ws_connection(client):
     """Test opening a websocket connection with an engineIO session."""
     mock_ws = AsyncMock()

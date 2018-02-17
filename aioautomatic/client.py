@@ -145,7 +145,11 @@ class Client(base.BaseApiObject):
             '&'.join('{}={}'.format(k, v) for k, v in params.items()))
         resp = yield from self._raw_request(aiohttp.hdrs.METH_GET, url)
         data = yield from resp.read()
-        packet_type, packet_data = next(decode_engineIO_content(data))
+        try:
+            packet_type, packet_data = next(decode_engineIO_content(data))
+        except StopIteration as exc:
+            raise exceptions.TransportError(
+                'engineIO session packet not received') from exc
         packet_str = packet_data.decode('utf-8')
         if packet_type != 0:
             raise exceptions.TransportError(
