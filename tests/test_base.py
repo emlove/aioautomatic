@@ -276,7 +276,7 @@ def test_result_next_list(session):
     assert previous_list is None
     assert len(obj) == 0
 
-    assert obj.next is "next_url"
+    assert obj.next == "next_url"
     assert len(obj) == 0
     assert len(next_list) == 2
     assert sorted([item.attr1 for item in next_list]) == \
@@ -318,7 +318,7 @@ def test_result_previous_list(session):
     assert next_list is None
     assert len(obj) == 0
 
-    assert obj.previous is "previous_url"
+    assert obj.previous == "previous_url"
     assert len(obj) == 0
     assert len(previous_list) == 2
     assert sorted([item.attr1 for item in previous_list]) == \
